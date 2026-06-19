@@ -504,12 +504,22 @@ async function loadExcelFromDrive() {
 // ── Parse row ──────────────────────────────────────────────────────────────
 function parseRow(r, i) {
   const get = (...keys) => {
-    for (const k of keys)
-      for (const rk of Object.keys(r))
-        if (rk.trim().toLowerCase() === k.toLowerCase()) return r[rk];
+    const rowKeys = Object.keys(r);
+    // 1. Exakter Treffer (case-insensitiv)
+    for (const k of keys) {
+      const kl = k.toLowerCase().trim();
+      for (const rk of rowKeys)
+        if (rk.trim().toLowerCase() === kl) return r[rk];
+    }
+    // 2. Partieller Treffer: Spaltenname enthaelt Suchbegriff (z.B. "Kosten [CHF]" enthaelt "Kosten")
+    for (const k of keys) {
+      const kl = k.toLowerCase().trim();
+      for (const rk of rowKeys)
+        if (rk.trim().toLowerCase().includes(kl)) return r[rk];
+    }
     return '';
   };
-  const raw_datum = get('Datum','datum','Date');
+  const raw_datum = get('Datum','Date');
   let datum = '';
   if (raw_datum instanceof Date) datum = raw_datum.toISOString().split('T')[0];
   else if (typeof raw_datum === 'string' && raw_datum) datum = raw_datum.trim();
@@ -517,9 +527,11 @@ function parseRow(r, i) {
     const d = new Date(Math.round((raw_datum - 25569) * 86400 * 1000));
     datum = d.toISOString().split('T')[0];
   }
-  const kosten  = parseFloat(String(get('Kosten CHF','Kosten chf','kosten chf','Kosten','kosten')).replace(',','.')) || 0;
-  const spenden = parseFloat(String(get('Spenden CHF','Spenden chf','spenden chf','Spenden','spenden')).replace(',','.')) || 0;
-  const plz = String(get('PLZ','plz')).trim();
+  const kostenRaw  = get('Kosten [CHF]','Kosten CHF','Kosten');
+  const spendenRaw = get('Spenden [CHF]','Spenden CHF','Spenden');
+  const kosten  = parseFloat(String(kostenRaw).replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
+  const spenden = parseFloat(String(spendenRaw).replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
+  const plz = String(get('PLZ')).trim();
   return {
     nr:         String(get('Nr.','Nr','nr','Nummer') || (i+1)),
     datum, plz,
