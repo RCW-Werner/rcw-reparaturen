@@ -492,7 +492,11 @@ async function loadExcelFromDrive(){
     });
     populateDropdowns();
     // Start- und Enddatum aus Tabelle übernehmen
-    const daten=allData.map(r=>r.datum).filter(Boolean).sort();
+    // Nur gültige ISO-Daten (yyyy-mm-dd) berücksichtigen und korrekt sortieren
+    const daten=allData
+      .map(r=>r.datum)
+      .filter(d=>d&&/^\d{4}-\d{2}-\d{2}$/.test(d))
+      .sort();
     if(daten.length){
       document.getElementById('f_von').value=daten[0];
       document.getElementById('f_bis').value=daten[daten.length-1];
@@ -526,11 +530,23 @@ function parseRow(r,i,lastDatum=''){
     datum=rd.toISOString().split('T')[0];
   } else if(typeof rd==='string'&&rd.trim()){
     const s=rd.trim();
-    // Nur eine Zahl? → kein gültiges Datum → Vorgänger übernehmen
     if(/^\d+$/.test(s)){
-      datum=''; // wird unten durch lastDatum ersetzt
-    } else {
+      // Nur eine Zahl → Vorgänger übernehmen
+      datum='';
+    } else if(/^\d{4}-\d{2}-\d{2}$/.test(s)){
+      // Bereits ISO-Format yyyy-mm-dd
       datum=s;
+    } else if(/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(s)){
+      // Schweizer Format dd.mm.yyyy → ISO umwandeln
+      const [dd,mm,yyyy]=s.split('.');
+      datum=yyyy+'-'+mm.padStart(2,'0')+'-'+dd.padStart(2,'0');
+    } else if(/^\d{1,2}\.\d{1,2}\.\d{2}$/.test(s)){
+      // Schweizer Format dd.mm.yy → ISO umwandeln
+      const [dd,mm,yy]=s.split('.');
+      const yyyy=parseInt(yy)<50?'20'+yy:'19'+yy;
+      datum=yyyy+'-'+mm.padStart(2,'0')+'-'+dd.padStart(2,'0');
+    } else {
+      datum=s; // Unbekanntes Format, so belassen
     }
   } else if(typeof rd==='number'){
     // Excel-Seriennummer: nur gültig wenn im plausiblen Bereich (1900–2100)
