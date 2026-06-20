@@ -1486,11 +1486,9 @@ function exportCSV(){
   if(!filteredData.length){showToast('Keine Daten zum Exportieren.');return;}
   const cols=['nr','datum','name','plz','ort','geraet','kategorie','status','triage','reparateur','repariert','defekt','erledigt','kosten','spenden','kommentar'];
   const headers=['Nr.','Datum','Name','PLZ','Ort','Gerät','Kategorie','Status','Triage','Reparateur','Repariert','Defekt','Erledigt','Kosten CHF','Spenden CHF','Kommentar'];
-  const csvEsc=v=>{const s=String(v||'');return s.includes(',')||s.includes('"')||s.includes('
-')?'"'+s.replace(/"/g,'""')+'"':s;};
+  const csvEsc=v=>{const s=String(v||'');return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;};
   const rows=[headers.join(','),...filteredData.map(r=>cols.map(k=>csvEsc(k==='datum'?fmtDate(r[k]):r[k])).join(','))];
-  const blob=new Blob(['﻿'+rows.join('
-')],{type:'text/csv;charset=utf-8'});
+  const blob=new Blob(['\uFEFF'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
   a.download='RCW_Reparaturen_'+new Date().toISOString().split('T')[0]+'.csv';
