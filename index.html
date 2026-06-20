@@ -490,7 +490,15 @@ async function loadExcelFromDrive(){
       if(row.datum) lastDatum=row.datum;
       return row;
     });
-    populateDropdowns();applyFilters();
+    populateDropdowns();
+    // Start- und Enddatum aus Tabelle übernehmen
+    const daten=allData.map(r=>r.datum).filter(Boolean).sort();
+    if(daten.length){
+      document.getElementById('f_von').value=daten[0];
+      document.getElementById('f_bis').value=daten[daten.length-1];
+      clearQS();
+    }
+    applyFilters();
     document.getElementById('loadingScreen').style.display='none';
     document.getElementById('dataView').style.display='flex';
     document.getElementById('analyticsEmpty').style.display='none';
