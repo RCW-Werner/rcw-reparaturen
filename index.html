@@ -168,6 +168,24 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 .qs-btn.active{background:var(--g1);color:#fff;border-color:var(--g1)}
 .filter-bar{background:var(--white);border-bottom:2px solid var(--border);padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;position:sticky;top:56px;z-index:90;box-shadow:0 2px 6px rgba(0,0,0,.07)}
 
+/* TREND CHART */
+.trend-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
+.trend-card h3{font-size:.84rem;font-weight:700;margin-bottom:10px;color:var(--ink)}
+.trend-svg{width:100%;overflow:visible}
+.trend-line{fill:none;stroke:var(--g1);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.trend-area{fill:var(--g3);opacity:.6}
+.trend-dot{fill:var(--g1);cursor:pointer}
+.trend-dot:hover{fill:var(--g2);r:5}
+.trend-label{font-size:10px;fill:var(--soft);text-anchor:middle}
+.trend-val{font-size:10px;fill:var(--g1);font-weight:700;text-anchor:middle}
+.trend-tip{position:absolute;background:var(--ink);color:#fff;padding:5px 10px;border-radius:6px;font-size:.75rem;pointer-events:none;display:none;white-space:nowrap;z-index:50}
+/* GEGENSTAND SEARCH */
+.gegenstand-search-wrap{position:relative;max-width:280px}
+.gegenstand-search-wrap input{padding-left:28px!important}
+.gegenstand-search-wrap .si{position:absolute;left:8px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--soft);pointer-events:none}
+/* CSV BUTTON */
+.btn-csv{padding:6px 13px;background:#1a6f32;color:#fff;border:none;border-radius:6px;font-weight:700;font-size:.8rem;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
+.btn-csv:hover{background:#155228}
 /* MOBILE */
 @media(max-width:700px){
   .fb-group{min-width:calc(50% - 6px)}
@@ -236,6 +254,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <div class="qs-row" id="qsRow">
       <button class="qs-btn" onclick="setZeitraum('monat')">Akt. Monat</button>
       <button class="qs-btn" onclick="setZeitraum('letztermonat')">Letzter Monat</button>
+      <button class="qs-btn qs-month-toggle" onclick="toggleMonthPicker(this)">📅 Monat…</button>
       <button class="qs-btn" onclick="setZeitraum('alle')">Alle</button>
     </div>
   </div>
@@ -279,10 +298,28 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <label>Min. Kosten</label>
     <input type="number" id="f_kosten_min" placeholder="0" min="0" oninput="applyFilters()">
   </div>
+  <div class="fb-group wide">
+    <label>Gegenstand / Gerät</label>
+    <div class="gegenstand-search-wrap">
+      <span class="si">🔍</span>
+      <input type="text" id="f_gegenstand" placeholder="Gegenstand suchen…" oninput="applyFilters()">
+    </div>
+  </div>
   <div class="fb-actions">
     <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
+    <button class="btn-csv" onclick="exportCSV()">⬇ CSV</button>
     <button class="btn-report" onclick="openReport()">🖨 Report</button>
   </div>
+</div>
+
+<!-- Monatspicker Dropdown -->
+<div id="monthPicker" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;position:sticky;top:calc(56px + 48px);z-index:89;box-shadow:var(--shadow)">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+    <button onclick="monthPickerYear(-1)" style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--g1)">◀</button>
+    <span id="mpYearLabel" style="font-weight:700;font-size:.88rem;color:var(--g1)"></span>
+    <button onclick="monthPickerYear(1)" style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--g1)">▶</button>
+  </div>
+  <div id="mpMonths" style="display:grid;grid-template-columns:repeat(6,1fr);gap:4px"></div>
 </div>
 
 <!-- ── SUCHE TAB ── -->
@@ -342,6 +379,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
   </div>
   <div id="analyticsContent" style="display:none;flex-direction:column;gap:12px">
     <div class="stats-grid" id="statsGrid"></div>
+    <div style="position:relative"><div class="trend-card" id="trendCard" style="display:none"><h3>📈 Verlauf der Reparaturen</h3><div style="position:relative"><svg id="trendSvg" class="trend-svg"></svg><div class="trend-tip" id="trendTip"></div></div></div></div>
     <div class="charts-grid" id="chartsGrid"></div>
   </div>
 </div>
@@ -364,6 +402,9 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <!-- Stats -->
     <div class="report-section-title">Kennzahlen</div>
     <div class="stats-grid" id="rStatsGrid"></div>
+    <!-- Trend -->
+    <div class="report-section-title" style="margin-top:8px">Verlauf der Reparaturen</div>
+    <div style="position:relative"><div class="trend-card" id="rTrendCard" style="display:none"><div style="position:relative"><svg id="rTrendSvg" class="trend-svg"></svg></div></div></div>
     <!-- Charts -->
     <div class="report-section-title" style="margin-top:8px">Auswertung nach Kategorien, Reparateur, Triage, PLZ/Ort</div>
     <div class="charts-grid" id="rChartsGrid"></div>
@@ -1179,10 +1220,14 @@ function setZeitraum(mode){
   } else if(mode==='alle'){
     von=''; bis='';
   } else if(mode.startsWith('jahr:')){
-    // Spezifisches Jahr
     const jahr=parseInt(mode.split(':')[1]);
-    von=jahr+'-01-01';
-    bis=jahr+'-12-31';
+    von=jahr+'-01-01';bis=jahr+'-12-31';
+  } else if(mode.startsWith('monat:')){
+    const ym=mode.split(':')[1]; // yyyy-mm
+    const [yr,mo]=ym.split('-').map(Number);
+    von=fmt(new Date(yr,mo-1,1));
+    bis=fmt(new Date(yr,mo,0));
+    closeMonthPicker();
   }
   document.getElementById('f_von').value=von;
   document.getElementById('f_bis').value=bis;
@@ -1208,6 +1253,8 @@ function applyFilters(){
   const triage=document.getElementById('f_triage').value.toLowerCase();
   const sMin=parseFloat(document.getElementById('f_spenden_min').value)||0;
   const kMin=parseFloat(document.getElementById('f_kosten_min').value)||0;
+  const geg=(document.getElementById('f_gegenstand')||{}).value||'';
+  const gegL=geg.toLowerCase().trim();
   filteredData=allData.filter(r=>{
     if(von&&r.datum&&r.datum<von)return false;
     if(bis&&r.datum&&r.datum>bis)return false;
@@ -1219,6 +1266,7 @@ function applyFilters(){
     if(triage&&r.triage.toLowerCase()!==triage)return false;
     if(r.spenden<sMin)return false;
     if(r.kosten<kMin)return false;
+    if(gegL&&!r.geraet.toLowerCase().includes(gegL))return false;
     return true;
   });
   sortData();renderTable();
@@ -1234,7 +1282,7 @@ function applyFilters(){
   }
 }
 function resetFilters(){
-  ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min'].forEach(id=>document.getElementById(id).value='');
+  ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min','f_gegenstand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['f_status','f_kategorie','f_triage'].forEach(id=>document.getElementById(id).value='');
   clearQS();
   applyFilters();
@@ -1318,6 +1366,8 @@ function renderAnalytics(data,sgId,cgId){
     sc('Repariert',rep,rate+'% Erfolgsrate')+
     sc('Total Spenden','CHF '+tSp.toFixed(0),'Ø CHF '+(mSp>0?(tSp/mSp).toFixed(0):0))+
     sc('Total Kosten','CHF '+tKo.toFixed(0),'');
+  renderTrend(data,'trendSvg','trendCard');
+  renderTrend(data,'rTrendSvg','rTrendCard');
   document.getElementById(cgId).innerHTML=
     bc('Status',countBy(data,'status'))+
     bc('Kategorie',countBy(data,'kategorie'))+
@@ -1425,6 +1475,138 @@ function renderReport(){
       <td class="rnum" style="color:var(--g2)">${tS.toFixed(2)}</td>
       <td></td>
     </tr>`;
+}
+
+// ── CSV Export ────────────────────────────────────────────────────────────
+function exportCSV(){
+  if(!filteredData.length){showToast('Keine Daten zum Exportieren.');return;}
+  const cols=['nr','datum','name','plz','ort','geraet','kategorie','status','triage','reparateur','repariert','defekt','erledigt','kosten','spenden','kommentar'];
+  const headers=['Nr.','Datum','Name','PLZ','Ort','Gerät','Kategorie','Status','Triage','Reparateur','Repariert','Defekt','Erledigt','Kosten CHF','Spenden CHF','Kommentar'];
+  const csvEsc=v=>{const s=String(v||'');return s.includes(',')||s.includes('"')||s.includes('
+')?'"'+s.replace(/"/g,'""')+'"':s;};
+  const rows=[headers.join(','),...filteredData.map(r=>cols.map(k=>csvEsc(k==='datum'?fmtDate(r[k]):r[k])).join(','))];
+  const blob=new Blob(['﻿'+rows.join('
+')],{type:'text/csv;charset=utf-8'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download='RCW_Reparaturen_'+new Date().toISOString().split('T')[0]+'.csv';
+  a.click();
+  showToast('✅ CSV exportiert ('+filteredData.length+' Einträge)');
+}
+
+// ── Monatspicker ──────────────────────────────────────────────────────────
+let mpYear=new Date().getFullYear();
+function toggleMonthPicker(btn){
+  const mp=document.getElementById('monthPicker');
+  if(mp.style.display==='none'){
+    mpYear=new Date().getFullYear();
+    renderMonthPicker();
+    mp.style.display='block';
+    btn.classList.add('active');
+  } else {
+    mp.style.display='none';
+    btn.classList.remove('active');
+  }
+}
+function monthPickerYear(dir){
+  mpYear+=dir;
+  renderMonthPicker();
+}
+function renderMonthPicker(){
+  document.getElementById('mpYearLabel').textContent=mpYear;
+  const monate=['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'];
+  document.getElementById('mpMonths').innerHTML=monate.map((m,i)=>{
+    const mm=String(i+1).padStart(2,'0');
+    return`<button class="qs-btn" style="font-size:.75rem;padding:4px 6px" onclick="setZeitraum('monat:${mpYear}-${mm}')">${m}</button>`;
+  }).join('');
+}
+function closeMonthPicker(){
+  document.getElementById('monthPicker').style.display='none';
+  document.querySelector('.qs-month-toggle')&&document.querySelector('.qs-month-toggle').classList.remove('active');
+}
+
+// ── Trend Chart ───────────────────────────────────────────────────────────
+function renderTrend(data,svgId,cardId){
+  const card=document.getElementById(cardId);
+  const svg=document.getElementById(svgId);
+  if(!card||!svg)return;
+  if(!data.length){card.style.display='none';return;}
+
+  // Monatliche Aggregation
+  const monate={};
+  data.forEach(r=>{
+    if(!r.datum||!/^\d{4}-\d{2}/.test(r.datum))return;
+    const key=r.datum.substring(0,7); // yyyy-mm
+    monate[key]=(monate[key]||0)+1;
+  });
+  const keys=Object.keys(monate).sort();
+  if(keys.length<2){card.style.display='none';return;}
+  card.style.display='block';
+
+  const W=Math.max(600,keys.length*50);
+  const H=160;
+  const PAD={t:20,r:20,b:40,l:40};
+  const cW=W-PAD.l-PAD.r;
+  const cH=H-PAD.t-PAD.b;
+  const vals=keys.map(k=>monate[k]);
+  const maxV=Math.max(...vals)||1;
+
+  const x=i=>PAD.l+i*(cW/(keys.length-1||1));
+  const y=v=>PAD.t+cH-(v/maxV*cH);
+
+  // Area path
+  let area=`M${x(0)},${y(0)}`;
+  keys.forEach((_,i)=>{if(i>0)area+=` L${x(i)},${y(vals[i])}`;});
+  area+=` L${x(keys.length-1)},${PAD.t+cH} L${x(0)},${PAD.t+cH} Z`;
+
+  // Line path
+  let line=`M${x(0)},${y(vals[0])}`;
+  keys.forEach((_,i)=>{if(i>0)line+=` L${x(i)},${y(vals[i])}`;});
+
+  // X-axis labels (every nth)
+  const step=Math.ceil(keys.length/12);
+  const xLabels=keys.map((k,i)=>{
+    if(i%step!==0&&i!==keys.length-1)return'';
+    const [yr,mo]=k.split('-');
+    return`<text class="trend-label" x="${x(i)}" y="${H-8}">${mo}/${yr.slice(2)}</text>`;
+  }).join('');
+
+  // Y-axis labels
+  const yLabels=[0,Math.round(maxV/2),maxV].map(v=>
+    `<text style="font-size:10px;fill:var(--soft);text-anchor:end" x="${PAD.l-4}" y="${y(v)+3}">${v}</text>`
+  ).join('');
+
+  // Grid lines
+  const grid=[Math.round(maxV/2),maxV].map(v=>
+    `<line x1="${PAD.l}" y1="${y(v)}" x2="${W-PAD.r}" y2="${y(v)}" stroke="var(--border)" stroke-width="0.5" stroke-dasharray="3,3"/>`
+  ).join('');
+
+  // Dots with tooltips
+  const dots=keys.map((k,i)=>{
+    const [yr,mo]=k.split('-');
+    const moName=['','Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'][parseInt(mo)];
+    return`<circle class="trend-dot" cx="${x(i)}" cy="${y(vals[i])}" r="4"
+      onmouseover="showTrendTip(event,'${moName} ${yr}: ${vals[i]} Reparaturen')"
+      onmouseout="hideTrendTip()" />`;
+  }).join('');
+
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('height',H);
+  svg.innerHTML=`
+    ${grid}
+    <path class="trend-area" d="${area}"/>
+    <path class="trend-line" d="${line}"/>
+    ${xLabels}${yLabels}${dots}`;
+}
+function showTrendTip(e,text){
+  const tip=document.getElementById('trendTip');
+  if(!tip)return;
+  tip.textContent=text;tip.style.display='block';
+  tip.style.left=(e.offsetX+10)+'px';tip.style.top=(e.offsetY-30)+'px';
+}
+function hideTrendTip(){
+  const tip=document.getElementById('trendTip');
+  if(tip)tip.style.display='none';
 }
 
 // ── Helpers ────────────────────────────────────────────────────────────────
