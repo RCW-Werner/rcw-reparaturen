@@ -6,159 +6,173 @@
 <title>RCW – Reparatur-Verwaltung</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  :root {
-    --green-dark:  #2D6A4F;
-    --green-mid:   #40916C;
-    --green-light: #D8F3DC;
-    --green-pale:  #F0FAF2;
-    --ink:         #1B2028;
-    --ink-soft:    #4A5568;
-    --border:      #C8D9CB;
-    --bg:          #F5F7F0;
-    --white:       #FFFFFF;
-    --shadow:      0 2px 8px rgba(45,106,79,.12);
-    --radius:      8px;
-  }
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--ink); font-size: 14px; line-height: 1.5; }
+:root {
+  --g1:#2D6A4F; --g2:#40916C; --g3:#D8F3DC; --g4:#F0FAF2;
+  --ink:#1B2028; --soft:#4A5568; --border:#C8D9CB; --bg:#F5F7F0; --white:#fff;
+  --shadow:0 2px 8px rgba(45,106,79,.12); --r:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);font-size:14px;line-height:1.5}
 
-  /* ── Header ── */
-  header { background: var(--green-dark); color: #fff; padding: 14px 20px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 10px rgba(0,0,0,.25); }
-  .logo { width: 38px; height: 38px; background: var(--green-light); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 15px; color: var(--green-dark); flex-shrink: 0; }
-  header h1 { font-size: 1.15rem; font-weight: 700; }
-  header p  { font-size: .78rem; opacity: .75; margin-top: 1px; }
-  .header-right { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-  #loginBtn { background: #fff; color: var(--green-dark); border: none; padding: 7px 14px; border-radius: var(--radius); font-weight: 700; font-size: .85rem; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity .2s; }
-  #loginBtn:hover { opacity: .85; }
-  #logoutBtn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; padding: 6px 12px; border-radius: var(--radius); font-size: .8rem; cursor: pointer; display: none; }
-  #userInfo { font-size: .8rem; opacity: .85; display: none; }
-  #reloadBtn { background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); color: #fff; padding: 6px 12px; border-radius: var(--radius); font-size: .8rem; cursor: pointer; display: none; }
-  #reloadBtn:hover { background: rgba(255,255,255,.25); }
+/* HEADER */
+header{background:var(--g1);color:#fff;padding:12px 20px;display:flex;align-items:center;gap:12px;position:sticky;top:0;z-index:100;box-shadow:0 2px 10px rgba(0,0,0,.25)}
+.logo{width:36px;height:36px;background:var(--g3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--g1);flex-shrink:0}
+header h1{font-size:1.05rem;font-weight:700}
+header p{font-size:.75rem;opacity:.75;margin-top:1px}
+.hdr-right{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+#loginBtn{background:#fff;color:var(--g1);border:none;padding:6px 12px;border-radius:var(--r);font-weight:700;font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:5px}
+#logoutBtn,#reloadBtn{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 11px;border-radius:var(--r);font-size:.78rem;cursor:pointer;display:none}
+#userInfo{font-size:.78rem;opacity:.85;display:none}
 
-  /* ── Config panel ── */
-  #configPanel { background: #FFF8E1; border-bottom: 2px solid #FFD54F; padding: 12px 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  #configPanel label { font-size: .82rem; font-weight: 600; color: #5D4037; white-space: nowrap; }
-  #configPanel input { padding: 6px 10px; border: 1px solid #FFD54F; border-radius: 6px; font-size: .82rem; width: 340px; max-width: 100%; }
-  #configPanel input#clientIdInput { width: 420px; max-width: 100%; }
-  .btn-config { background: var(--green-dark); color: #fff; border: none; padding: 7px 14px; border-radius: 6px; font-size: .82rem; font-weight: 700; cursor: pointer; }
-  .btn-config:hover { background: var(--green-mid); }
-  .config-hint { font-size: .77rem; color: #795548; }
-  #configToggle { font-size: .8rem; color: var(--green-dark); cursor: pointer; text-decoration: underline; margin-left: 8px; }
+/* CONFIG */
+#configPanel{background:#FFF8E1;border-bottom:2px solid #FFD54F;padding:10px 20px;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap}
+#configPanel label{font-size:.8rem;font-weight:600;color:#5D4037;white-space:nowrap;margin-top:7px}
+.cfg-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;flex:1}
+#configPanel input{padding:6px 10px;border:1px solid #FFD54F;border-radius:6px;font-size:.82rem}
+#clientIdInput{width:380px;max-width:100%}
+#fileIdInput{width:280px;max-width:100%}
+.btn-cfg{background:var(--g1);color:#fff;border:none;padding:6px 13px;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer}
+.cfg-hint{font-size:.75rem;color:#795548;margin-top:4px}
+#cfgToggle{color:var(--g1);cursor:pointer;text-decoration:underline;margin-left:6px}
+#cfgHelp{display:none;background:#fff8e1;border-radius:6px;padding:10px;font-size:.78rem;color:#5d4037;line-height:1.6;margin-top:6px;max-width:700px}
 
-  /* ── Tabs ── */
-  .tabs { display: flex; background: var(--white); border-bottom: 2px solid var(--border); padding: 0 20px; gap: 4px; }
-  .tab-btn { padding: 10px 18px; border: none; background: none; font-size: .88rem; font-weight: 600; color: var(--ink-soft); cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -2px; transition: color .15s, border-color .15s; white-space: nowrap; }
-  .tab-btn.active { color: var(--green-dark); border-bottom-color: var(--green-dark); }
-  .tab-btn:hover:not(.active) { color: var(--green-mid); }
+/* TABS */
+.tabs{display:flex;background:var(--white);border-bottom:2px solid var(--border);padding:0 20px;gap:2px}
+.tab-btn{padding:9px 16px;border:none;background:none;font-size:.86rem;font-weight:600;color:var(--soft);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;white-space:nowrap}
+.tab-btn.active{color:var(--g1);border-bottom-color:var(--g1)}
+.tab-btn:hover:not(.active){color:var(--g2)}
+.tab-content{display:none;flex-direction:column;gap:10px;padding:14px 20px}
+.tab-content.active{display:flex}
 
-  /* ── Layout ── */
-  .app-body { display: flex; min-height: calc(100vh - 140px); }
+/* FILTER BAR (horizontal, oben) */
+.filter-bar{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end}
+.fb-group{display:flex;flex-direction:column;gap:3px;min-width:110px}
+.fb-group.wide{min-width:160px}
+.fb-group label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;color:var(--g1)}
+.fb-group input,.fb-group select{padding:6px 9px;border:1px solid var(--border);border-radius:6px;font-size:.82rem;color:var(--ink);background:var(--bg);width:100%}
+.fb-group input:focus,.fb-group select:focus{outline:none;border-color:var(--g2);background:var(--white)}
+.fb-actions{display:flex;gap:6px;align-items:flex-end;margin-left:auto;flex-wrap:wrap}
+.btn-reset{padding:6px 13px;background:var(--g3);color:var(--g1);border:1px solid var(--border);border-radius:6px;font-weight:700;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.btn-reset:hover{background:#b7e4c7}
+.btn-report{padding:6px 13px;background:var(--g1);color:#fff;border:none;border-radius:6px;font-weight:700;font-size:.8rem;cursor:pointer;white-space:nowrap}
+.btn-report:hover{background:var(--g2)}
 
-  /* ── Sidebar ── */
-  aside { width: 260px; flex-shrink: 0; background: var(--white); border-right: 1px solid var(--border); padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
-  .filter-section-title { font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--green-dark); margin-bottom: 6px; }
-  .filter-group { display: flex; flex-direction: column; gap: 6px; }
-  .filter-group label { font-size: .8rem; color: var(--ink-soft); }
-  .filter-group input, .filter-group select { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: 6px; font-size: .84rem; color: var(--ink); background: var(--bg); transition: border-color .2s; }
-  .filter-group input:focus, .filter-group select:focus { outline: none; border-color: var(--green-mid); background: var(--white); }
-  .btn-reset { width: 100%; padding: 8px; background: var(--green-light); color: var(--green-dark); border: 1px solid var(--border); border-radius: 6px; font-weight: 700; font-size: .83rem; cursor: pointer; margin-top: 4px; }
-  .btn-reset:hover { background: #b7e4c7; }
+/* INFO BAR */
+.info-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.count-badge{background:var(--g1);color:#fff;border-radius:20px;padding:2px 10px;font-size:.76rem;font-weight:700}
+.info-bar span{font-size:.81rem;color:var(--soft)}
 
-  /* ── Main ── */
-  main { flex: 1; padding: 16px; overflow: hidden; display: flex; flex-direction: column; gap: 12px; }
-  .tab-content { display: none; flex-direction: column; gap: 12px; }
-  .tab-content.active { display: flex; }
+/* TABLE */
+.table-panel{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.table-scroll{overflow-x:auto;max-height:calc(100vh - 300px)}
+table{width:100%;border-collapse:collapse;font-size:.8rem}
+thead tr{background:var(--g1);color:#fff;position:sticky;top:0;z-index:2}
+thead th{padding:9px 11px;text-align:left;font-weight:600;font-size:.75rem;letter-spacing:.02em;white-space:nowrap;cursor:pointer;user-select:none}
+thead th:hover{background:var(--g2)}
+thead th.sorted{background:var(--g2)}
+tbody tr{border-bottom:1px solid var(--g4);transition:background .1s;cursor:pointer}
+tbody tr:hover{background:var(--g4)}
+tbody td{padding:8px 11px;vertical-align:top}
+tbody td.ref{font-weight:700;color:var(--g1);white-space:nowrap}
+tbody td.num{text-align:right;font-variant-numeric:tabular-nums}
+tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2);font-weight:600}
 
-  /* ── Status/login screen ── */
-  .center-card { background: var(--white); border-radius: 12px; box-shadow: var(--shadow); padding: 48px 32px; text-align: center; max-width: 500px; margin: 40px auto; }
-  .center-card .icon { font-size: 3rem; margin-bottom: 14px; }
-  .center-card h2 { font-size: 1.2rem; margin-bottom: 8px; }
-  .center-card p { color: var(--ink-soft); font-size: .88rem; margin-bottom: 20px; line-height: 1.6; }
-  .btn-google { background: var(--green-dark); color: #fff; border: none; padding: 12px 28px; border-radius: var(--radius); font-size: .95rem; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
-  .btn-google:hover { background: var(--green-mid); }
-  .spinner { display: inline-block; width: 28px; height: 28px; border: 3px solid var(--green-light); border-top-color: var(--green-dark); border-radius: 50%; animation: spin .7s linear infinite; margin-bottom: 14px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+/* BADGES */
+.badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.b-rep{background:#D1FAE5;color:#065F46}
+.b-unr{background:#FEE2E2;color:#991B1B}
+.b-tri{background:#DBEAFE;color:#1E40AF}
+.b-war{background:#FEF3C7;color:#92400E}
+.b-def{background:#F3F4F6;color:#374151}
 
-  /* ── Info bar ── */
-  .info-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-  .count-badge { background: var(--green-dark); color: #fff; border-radius: 20px; padding: 3px 11px; font-size: .78rem; font-weight: 700; }
-  .info-bar span { font-size: .83rem; color: var(--ink-soft); }
+/* CENTER CARDS */
+.center-card{background:var(--white);border-radius:12px;box-shadow:var(--shadow);padding:40px 28px;text-align:center;max-width:480px;margin:30px auto}
+.center-card .icon{font-size:2.8rem;margin-bottom:12px}
+.center-card h2{font-size:1.1rem;margin-bottom:8px}
+.center-card p{color:var(--soft);font-size:.85rem;margin-bottom:18px;line-height:1.6}
+.btn-google{background:var(--g1);color:#fff;border:none;padding:11px 24px;border-radius:var(--r);font-size:.9rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:7px}
+.spinner{display:inline-block;width:26px;height:26px;border:3px solid var(--g3);border-top-color:var(--g1);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-  /* ── Table ── */
-  .table-panel { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
-  .table-scroll { overflow-x: auto; max-height: calc(100vh - 240px); }
-  table { width: 100%; border-collapse: collapse; font-size: .82rem; }
-  thead tr { background: var(--green-dark); color: #fff; position: sticky; top: 0; z-index: 2; }
-  thead th { padding: 10px 12px; text-align: left; font-weight: 600; font-size: .78rem; letter-spacing: .02em; white-space: nowrap; cursor: pointer; user-select: none; }
-  thead th:hover { background: var(--green-mid); }
-  thead th.sorted { background: var(--green-mid); }
-  tbody tr { border-bottom: 1px solid var(--green-pale); transition: background .1s; cursor: pointer; }
-  tbody tr:hover { background: var(--green-pale); }
-  tbody td { padding: 9px 12px; vertical-align: top; }
-  tbody td.ref { font-weight: 700; color: var(--green-dark); white-space: nowrap; }
-  tbody td.kosten { text-align: right; font-variant-numeric: tabular-nums; }
-  tbody td.spenden { text-align: right; font-variant-numeric: tabular-nums; color: var(--green-mid); font-weight: 600; }
+/* ANALYTICS */
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.stat-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
+.stat-card .lbl{font-size:.7rem;color:var(--soft);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.stat-card .val{font-size:1.6rem;font-weight:800;color:var(--g1)}
+.stat-card .sub{font-size:.76rem;color:var(--soft);margin-top:1px}
+.charts-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+.chart-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
+.chart-card h3{font-size:.84rem;font-weight:700;margin-bottom:12px;color:var(--ink)}
+.bar-chart{display:flex;flex-direction:column;gap:6px}
+.bar-row{display:flex;align-items:center;gap:7px}
+.bar-lbl{width:120px;font-size:.75rem;color:var(--soft);text-align:right;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-track{flex:1;height:16px;background:var(--g4);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--g1);border-radius:4px}
+.bar-cnt{font-size:.75rem;font-weight:700;color:var(--soft);width:28px}
 
-  .badge { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: .72rem; font-weight: 700; white-space: nowrap; }
-  .badge-repariert   { background: #D1FAE5; color: #065F46; }
-  .badge-unrepariert { background: #FEE2E2; color: #991B1B; }
-  .badge-triage      { background: #DBEAFE; color: #1E40AF; }
-  .badge-wartet      { background: #FEF3C7; color: #92400E; }
-  .badge-default     { background: #F3F4F6; color: #374151; }
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .2s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:12px;max-width:560px;width:100%;max-height:85vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3);transform:translateY(20px);transition:transform .2s}
+.modal-overlay.open .modal{transform:translateY(0)}
+.modal-hdr{background:var(--g1);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-radius:12px 12px 0 0}
+.modal-hdr h2{font-size:.95rem}
+.modal-close{background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer}
+.modal-body{padding:18px}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.di .dl{font-size:.7rem;color:var(--soft);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}
+.di .dv{font-size:.88rem;font-weight:600}
+.di.full{grid-column:1/-1}
+.di .dv.cmt{font-weight:400;color:var(--soft);font-style:italic}
 
-  /* ── Analytics ── */
-  .analytics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
-  .stat-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
-  .stat-card .label { font-size: .75rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 4px; }
-  .stat-card .value { font-size: 1.75rem; font-weight: 800; color: var(--green-dark); }
-  .stat-card .sub   { font-size: .8rem; color: var(--ink-soft); margin-top: 2px; }
-  .chart-card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px 18px; }
-  .chart-card h3 { font-size: .88rem; font-weight: 700; margin-bottom: 14px; }
-  .bar-chart { display: flex; flex-direction: column; gap: 8px; }
-  .bar-row { display: flex; align-items: center; gap: 8px; }
-  .bar-label { width: 130px; font-size: .78rem; color: var(--ink-soft); text-align: right; flex-shrink: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .bar-track { flex: 1; height: 18px; background: var(--green-pale); border-radius: 4px; overflow: hidden; }
-  .bar-fill  { height: 100%; background: var(--green-dark); border-radius: 4px; }
-  .bar-count { font-size: .78rem; font-weight: 700; color: var(--ink-soft); width: 30px; }
-  .analytics-section { display: flex; flex-direction: column; gap: 14px; }
+/* ── REPORT ── */
+#reportView{display:none;flex-direction:column;gap:16px}
+.report-header-bar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.report-title-block h2{font-size:1.1rem;font-weight:700;color:var(--g1)}
+.report-title-block p{font-size:.8rem;color:var(--soft)}
+.btn-print{padding:7px 16px;background:var(--g1);color:#fff;border:none;border-radius:6px;font-weight:700;font-size:.82rem;cursor:pointer;display:flex;align-items:center;gap:6px}
+.btn-print:hover{background:var(--g2)}
+.report-section-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--g1);margin-top:4px;padding-bottom:6px;border-bottom:2px solid var(--g3)}
+.report-table{width:100%;border-collapse:collapse;font-size:.75rem}
+.report-table thead tr{background:var(--g1);color:#fff}
+.report-table thead th{padding:7px 9px;text-align:left;font-weight:600;font-size:.7rem;white-space:nowrap}
+.report-table tbody tr{border-bottom:1px solid var(--g4)}
+.report-table tbody tr:nth-child(even){background:var(--g4)}
+.report-table tbody td{padding:6px 9px;vertical-align:top}
+.report-table tbody td.rnum{text-align:right;font-variant-numeric:tabular-nums}
+.report-table tfoot tr{background:var(--g3);font-weight:700}
+.report-table tfoot td{padding:7px 9px;font-size:.76rem}
 
-  /* ── Modal ── */
-  .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 200; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity .2s; }
-  .modal-overlay.open { opacity: 1; pointer-events: all; }
-  .modal { background: var(--white); border-radius: 12px; max-width: 580px; width: 100%; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,.3); transform: translateY(20px); transition: transform .2s; }
-  .modal-overlay.open .modal { transform: translateY(0); }
-  .modal-header { background: var(--green-dark); color: #fff; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-radius: 12px 12px 0 0; }
-  .modal-header h2 { font-size: 1rem; }
-  .modal-close { background: none; border: none; color: #fff; font-size: 1.3rem; cursor: pointer; }
-  .modal-body { padding: 20px; }
-  .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .detail-item .dl { font-size: .72rem; color: var(--ink-soft); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 3px; }
-  .detail-item .dv { font-size: .9rem; font-weight: 600; }
-  .detail-item.full { grid-column: 1 / -1; }
-  .detail-item .dv.comment { font-weight: 400; color: var(--ink-soft); font-style: italic; }
+/* PRINT */
+@media print {
+  header,#configPanel,.tabs,.filter-bar,.info-bar,.table-panel,
+  #loginScreen,#loadingScreen,.btn-print,.report-header-bar .btn-print,
+  #toast,.modal-overlay{display:none!important}
+  .tab-content{display:flex!important;padding:0!important}
+  #tab-report{display:block!important}
+  #reportView{display:flex!important}
+  body{background:#fff;font-size:11px}
+  .stat-card{box-shadow:none;border:1px solid #ddd}
+  .chart-card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+  .report-table{font-size:9px}
+  .report-title-block h2{font-size:14px}
+  @page{margin:1.5cm;size:A4}
+}
 
-  /* ── Mobile ── */
-  @media (max-width: 700px) {
-    aside { display: none; }
-    .filter-fab { display: flex !important; }
-    main { padding: 10px; }
-    header h1 { font-size: 1rem; }
-    header p { display: none; }
-    .detail-grid { grid-template-columns: 1fr; }
-    #configPanel input { width: 100%; }
-  }
-  .filter-fab { display: none; position: fixed; bottom: 20px; right: 20px; background: var(--green-dark); color: #fff; border: none; width: 54px; height: 54px; border-radius: 50%; font-size: 1.4rem; cursor: pointer; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(45,106,79,.4); z-index: 150; }
-  .filter-drawer { display: none; position: fixed; inset: 0; z-index: 180; }
-  .filter-drawer.open { display: flex; }
-  .filter-drawer-overlay { position: absolute; inset: 0; background: rgba(0,0,0,.4); }
-  .filter-drawer-panel { position: absolute; left: 0; top: 0; bottom: 0; width: 290px; background: var(--white); padding: 20px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
-  .drawer-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-  .drawer-header h3 { font-size: 1rem; font-weight: 700; color: var(--green-dark); }
-  .drawer-close { background: none; border: none; font-size: 1.3rem; cursor: pointer; color: var(--ink-soft); }
+/* MOBILE */
+@media(max-width:700px){
+  .fb-group{min-width:calc(50% - 6px)}
+  .fb-group.wide{min-width:100%}
+  header h1{font-size:.95rem}
+  header p{display:none}
+  .detail-grid{grid-template-columns:1fr}
+  .tabs{padding:0 10px}
+  .tab-content{padding:10px}
+}
 
-  /* error toast */
-  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: #1B2028; color: #fff; padding: 10px 20px; border-radius: 8px; font-size: .85rem; z-index: 999; opacity: 0; transition: opacity .3s; pointer-events: none; max-width: 90vw; text-align: center; }
-  #toast.show { opacity: 1; }
+/* TOAST */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1B2028;color:#fff;padding:9px 18px;border-radius:8px;font-size:.83rem;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;max-width:90vw;text-align:center}
+#toast.show{opacity:1}
 </style>
 </head>
 <body>
@@ -166,40 +180,35 @@
 <!-- Header -->
 <header>
   <div class="logo">RCW</div>
-  <div>
-    <h1>Reparatur-Verwaltung</h1>
-    <p>Repair Café Wollerau</p>
-  </div>
-  <div class="header-right">
+  <div><h1>Reparatur-Verwaltung</h1><p>Repair Café Wollerau</p></div>
+  <div class="hdr-right">
     <span id="userInfo"></span>
     <button id="reloadBtn" onclick="loadExcelFromDrive()">↺ Neu laden</button>
     <button id="loginBtn" onclick="startLogin()">
-      <svg width="16" height="16" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.2 33.6 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.9 0 20.4-7.9 20.4-21 0-1.4-.1-2.7-.4-4z"/></svg>
+      <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.2 33.6 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.9 0 20.4-7.9 20.4-21 0-1.4-.1-2.7-.4-4z"/></svg>
       Mit Google anmelden
     </button>
     <button id="logoutBtn" onclick="logout()">Abmelden</button>
   </div>
 </header>
 
-<!-- Config Panel -->
+<!-- Config -->
 <div id="configPanel">
   <label>⚙ Einrichtung:</label>
-  <div style="display:flex; flex-direction:column; gap:6px; flex:1;">
-    <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-      <label style="white-space:nowrap;">Google Client-ID:</label>
-      <input type="text" id="clientIdInput" placeholder="12345678-abc.apps.googleusercontent.com" value="">
-      <label style="white-space:nowrap;">File-ID (Google Drive):</label>
-      <input type="text" id="fileIdInput" placeholder="1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgVE2upms" value="">
-      <button class="btn-config" onclick="saveConfig()">Speichern</button>
+  <div style="flex:1">
+    <div class="cfg-row">
+      <div><label style="display:block;font-size:.76rem;color:#5D4037;margin-bottom:2px">Google Client-ID</label>
+        <input type="text" id="clientIdInput" placeholder="12345...apps.googleusercontent.com"></div>
+      <div><label style="display:block;font-size:.76rem;color:#5D4037;margin-bottom:2px">Google Drive File-ID</label>
+        <input type="text" id="fileIdInput" placeholder="1BxiMVs0XRA5nFMdK..."></div>
+      <button class="btn-cfg" onclick="saveConfig()" style="margin-top:18px">Speichern</button>
     </div>
-    <div class="config-hint">
-      💡 Client-ID und File-ID einmalig eingeben und speichern. Danach bleibt alles gespeichert.
-      <span id="configToggle" onclick="toggleConfigHelp()">Wo finde ich die File-ID? ▼</span>
+    <div class="cfg-hint">💡 Einmalig eingeben und speichern.
+      <span id="cfgToggle" onclick="toggleCfgHelp()">Wo finde ich die File-ID? ▼</span>
     </div>
-    <div id="configHelp" style="display:none; background:#fff8e1; border-radius:6px; padding:10px; font-size:.8rem; color:#5d4037; line-height:1.6;">
-      <strong>File-ID:</strong> Öffne die Excel-Datei auf Google Drive → rechte Maustaste → „Link kopieren".<br>
-      Der Link sieht so aus: <code>https://drive.google.com/file/d/<strong>HIER-IST-DIE-FILE-ID</strong>/view</code><br><br>
-      <strong>Client-ID:</strong> Siehe Einrichtungsanleitung im Beipackzettel.
+    <div id="cfgHelp">
+      <strong>File-ID:</strong> Google Drive → Datei → rechte Maustaste → „Link kopieren"<br>
+      Link: <code>https://drive.google.com/file/d/<strong>HIER-DIE-ID</strong>/view</code>
     </div>
   </div>
 </div>
@@ -208,137 +217,158 @@
 <div class="tabs">
   <button class="tab-btn active" data-tab="search">🔍 Suche & Übersicht</button>
   <button class="tab-btn" data-tab="analytics">📊 Auswertung</button>
+  <button class="tab-btn" data-tab="report">🖨 Report</button>
 </div>
 
-<!-- App body -->
-<div class="app-body">
-  <aside id="sidebar">
-    <div>
-      <div class="filter-section-title">🗓 Zeitraum</div>
-      <div class="filter-group">
-        <label>Von</label>
-        <input type="date" id="f_von" onchange="applyFilters()">
-        <label>Bis</label>
-        <input type="date" id="f_bis" onchange="applyFilters()">
-      </div>
-    </div>
-    <div>
-      <div class="filter-section-title">🔤 Textsuche</div>
-      <div class="filter-group">
-        <label>Name / Kundin / Kunde</label>
-        <input type="text" id="f_name" placeholder="Name suchen…" oninput="applyFilters()">
-        <label>PLZ</label>
-        <input type="text" id="f_plz" placeholder="PLZ…" oninput="applyFilters()">
-        <label>Reparateur</label>
-        <input type="text" id="f_rep" placeholder="Reparateur…" oninput="applyFilters()">
-      </div>
-    </div>
-    <div>
-      <div class="filter-section-title">📋 Kategorie & Status</div>
-      <div class="filter-group">
-        <label>Status</label>
-        <select id="f_status" onchange="applyFilters()"><option value="">Alle Status</option></select>
-        <label>Kategorie</label>
-        <select id="f_kategorie" onchange="applyFilters()"><option value="">Alle Kategorien</option></select>
-        <label>Triage</label>
-        <select id="f_triage" onchange="applyFilters()"><option value="">Alle Triage</option></select>
-      </div>
-    </div>
-    <div>
-      <div class="filter-section-title">💰 Kosten & Spenden</div>
-      <div class="filter-group">
-        <label>Min. Spenden (CHF)</label>
-        <input type="number" id="f_spenden_min" placeholder="0" min="0" oninput="applyFilters()">
-        <label>Min. Kosten (CHF)</label>
-        <input type="number" id="f_kosten_min" placeholder="0" min="0" oninput="applyFilters()">
-      </div>
-    </div>
-    <button class="btn-reset" onclick="resetFilters()">↺ Filter zurücksetzen</button>
-  </aside>
+<!-- ── SUCHE TAB ── -->
+<div class="tab-content active" id="tab-search">
 
-  <main>
-    <!-- SEARCH TAB -->
-    <div class="tab-content active" id="tab-search">
-      <div id="loginScreen" class="center-card">
-        <div class="icon">🔐</div>
-        <h2>Anmelden erforderlich</h2>
-        <p>Melde dich mit dem Google-Konto an, das Zugriff auf die RCW-Tabelle hat. Die Daten werden nur gelesen, nie verändert.</p>
-        <button class="btn-google" onclick="startLogin()">
-          <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.2 33.6 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.9 0 20.4-7.9 20.4-21 0-1.4-.1-2.7-.4-4z"/></svg>
-          Mit Google anmelden
-        </button>
-      </div>
-      <div id="loadingScreen" class="center-card" style="display:none;">
-        <div class="spinner"></div>
-        <h2>Daten werden geladen…</h2>
-        <p>Excel-Datei wird von Google Drive gelesen.</p>
-      </div>
-      <div id="dataView" style="display:none; flex-direction:column; gap:12px;">
-        <div class="info-bar">
-          <span class="count-badge" id="countBadge">0</span>
-          <span id="countLabel">Einträge gefunden</span>
-          <span style="margin-left:auto; font-size:.8rem; color:var(--ink-soft);" id="sortInfo"></span>
-        </div>
-        <div class="table-panel">
-          <div class="table-scroll">
-            <table id="mainTable">
-              <thead>
-                <tr>
-                  <th onclick="sortBy('nr')" data-col="nr">Nr. ↕</th>
-                  <th onclick="sortBy('datum')" data-col="datum">Datum ↕</th>
-                  <th onclick="sortBy('name')" data-col="name">Kundin/Kunde ↕</th>
-                  <th onclick="sortBy('plz')" data-col="plz">PLZ / Ort ↕</th>
-                  <th onclick="sortBy('geraet')" data-col="geraet">Gegenstand ↕</th>
-                  <th onclick="sortBy('kategorie')" data-col="kategorie">Kategorie ↕</th>
-                  <th onclick="sortBy('status')" data-col="status">Status ↕</th>
-                  <th onclick="sortBy('triage')" data-col="triage">Triage ↕</th>
-                  <th onclick="sortBy('reparateur')" data-col="reparateur">Reparateur ↕</th>
-                  <th onclick="sortBy('kosten')" data-col="kosten">Kosten ↕</th>
-                  <th onclick="sortBy('spenden')" data-col="spenden">Spenden ↕</th>
-                </tr>
-              </thead>
-              <tbody id="tableBody"></tbody>
-            </table>
-          </div>
-        </div>
+  <!-- Filter Bar oben -->
+  <div class="filter-bar">
+    <div class="fb-group">
+      <label>Von</label>
+      <input type="date" id="f_von" onchange="applyFilters()">
+    </div>
+    <div class="fb-group">
+      <label>Bis</label>
+      <input type="date" id="f_bis" onchange="applyFilters()">
+    </div>
+    <div class="fb-group wide">
+      <label>Name / Kunde</label>
+      <input type="text" id="f_name" placeholder="Name…" oninput="applyFilters()">
+    </div>
+    <div class="fb-group">
+      <label>PLZ</label>
+      <input type="text" id="f_plz" placeholder="PLZ…" oninput="applyFilters()">
+    </div>
+    <div class="fb-group wide">
+      <label>Reparateur</label>
+      <input type="text" id="f_rep" placeholder="Reparateur…" oninput="applyFilters()">
+    </div>
+    <div class="fb-group">
+      <label>Status</label>
+      <select id="f_status" onchange="applyFilters()"><option value="">Alle</option></select>
+    </div>
+    <div class="fb-group">
+      <label>Kategorie</label>
+      <select id="f_kategorie" onchange="applyFilters()"><option value="">Alle</option></select>
+    </div>
+    <div class="fb-group">
+      <label>Triage</label>
+      <select id="f_triage" onchange="applyFilters()"><option value="">Alle</option></select>
+    </div>
+    <div class="fb-group">
+      <label>Min. Spenden</label>
+      <input type="number" id="f_spenden_min" placeholder="0" min="0" oninput="applyFilters()">
+    </div>
+    <div class="fb-group">
+      <label>Min. Kosten</label>
+      <input type="number" id="f_kosten_min" placeholder="0" min="0" oninput="applyFilters()">
+    </div>
+    <div class="fb-actions">
+      <button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
+      <button class="btn-report" onclick="openReport()">🖨 Report</button>
+    </div>
+  </div>
+
+  <!-- Login / Loading / Data -->
+  <div id="loginScreen" class="center-card">
+    <div class="icon">🔐</div>
+    <h2>Anmelden erforderlich</h2>
+    <p>Melde dich mit dem Google-Konto an, das Zugriff auf die RCW-Tabelle hat.</p>
+    <button class="btn-google" onclick="startLogin()">
+      <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.2 33.6 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.9 0 20.4-7.9 20.4-21 0-1.4-.1-2.7-.4-4z"/></svg>
+      Mit Google anmelden
+    </button>
+  </div>
+
+  <div id="loadingScreen" class="center-card" style="display:none">
+    <div class="spinner"></div>
+    <h2>Daten werden geladen…</h2>
+    <p>Excel-Datei wird von Google Drive gelesen.</p>
+  </div>
+
+  <div id="dataView" style="display:none;flex-direction:column;gap:10px">
+    <div class="info-bar">
+      <span class="count-badge" id="countBadge">0</span>
+      <span id="countLabel">Einträge</span>
+      <span style="margin-left:auto;font-size:.78rem;color:var(--soft)" id="sortInfo"></span>
+    </div>
+    <div class="table-panel">
+      <div class="table-scroll">
+        <table id="mainTable">
+          <thead><tr>
+            <th onclick="sortBy('nr')" data-col="nr">Nr. ↕</th>
+            <th onclick="sortBy('datum')" data-col="datum">Datum ↕</th>
+            <th onclick="sortBy('name')" data-col="name">Kundin/Kunde ↕</th>
+            <th onclick="sortBy('plz')" data-col="plz">PLZ / Ort ↕</th>
+            <th onclick="sortBy('geraet')" data-col="geraet">Gegenstand ↕</th>
+            <th onclick="sortBy('kategorie')" data-col="kategorie">Kategorie ↕</th>
+            <th onclick="sortBy('status')" data-col="status">Status ↕</th>
+            <th onclick="sortBy('triage')" data-col="triage">Triage ↕</th>
+            <th onclick="sortBy('reparateur')" data-col="reparateur">Reparateur ↕</th>
+            <th onclick="sortBy('kosten')" data-col="kosten">Kosten ↕</th>
+            <th onclick="sortBy('spenden')" data-col="spenden">Spenden ↕</th>
+          </tr></thead>
+          <tbody id="tableBody"></tbody>
+        </table>
       </div>
     </div>
-
-    <!-- ANALYTICS TAB -->
-    <div class="tab-content" id="tab-analytics">
-      <div id="analyticsEmpty" class="center-card">
-        <div class="icon">📊</div>
-        <h2>Noch keine Daten geladen</h2>
-        <p>Melde dich an, um die Auswertung zu sehen.</p>
-      </div>
-      <div id="analyticsContent" style="display:none;" class="analytics-section">
-        <div class="analytics-grid" id="statsGrid"></div>
-        <div class="analytics-grid" id="chartsGrid"></div>
-      </div>
-    </div>
-  </main>
-</div>
-
-<!-- Mobile FAB -->
-<button class="filter-fab" onclick="openDrawer()">⚙</button>
-
-<!-- Mobile Drawer -->
-<div class="filter-drawer" id="filterDrawer">
-  <div class="filter-drawer-overlay" onclick="closeDrawer()"></div>
-  <div class="filter-drawer-panel">
-    <div class="drawer-header">
-      <h3>Filter</h3>
-      <button class="drawer-close" onclick="closeDrawer()">✕</button>
-    </div>
-    <div id="drawerFilters"></div>
-    <button class="btn-reset" onclick="resetFilters(); closeDrawer()">↺ Filter zurücksetzen</button>
   </div>
 </div>
 
-<!-- Detail Modal -->
+<!-- ── AUSWERTUNG TAB ── -->
+<div class="tab-content" id="tab-analytics">
+  <div id="analyticsEmpty" class="center-card">
+    <div class="icon">📊</div><h2>Noch keine Daten</h2>
+    <p>Bitte zuerst anmelden.</p>
+  </div>
+  <div id="analyticsContent" style="display:none;flex-direction:column;gap:12px">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="charts-grid" id="chartsGrid"></div>
+  </div>
+</div>
+
+<!-- ── REPORT TAB ── -->
+<div class="tab-content" id="tab-report">
+  <div id="reportEmpty" class="center-card">
+    <div class="icon">🖨</div><h2>Noch keine Daten</h2>
+    <p>Bitte zuerst anmelden und ggf. Filter setzen.</p>
+  </div>
+  <div id="reportView">
+    <div class="report-header-bar">
+      <div class="report-title-block">
+        <h2 id="reportTitle">RCW Repair Café Wollerau – Reparatur-Report</h2>
+        <p id="reportSubtitle"></p>
+      </div>
+      <button class="btn-print" onclick="window.print()">🖨 Als PDF drucken</button>
+    </div>
+    <!-- Stats -->
+    <div class="report-section-title">Kennzahlen</div>
+    <div class="stats-grid" id="rStatsGrid"></div>
+    <!-- Charts -->
+    <div class="report-section-title" style="margin-top:8px">Auswertung nach Kategorien</div>
+    <div class="charts-grid" id="rChartsGrid"></div>
+    <!-- Detail list -->
+    <div class="report-section-title" style="margin-top:8px">Detailliste</div>
+    <div style="overflow-x:auto">
+      <table class="report-table" id="reportTable">
+        <thead><tr>
+          <th>Nr.</th><th>Datum</th><th>Kundin/Kunde</th><th>PLZ/Ort</th>
+          <th>Gegenstand</th><th>Kategorie</th><th>Status</th>
+          <th>Reparateur</th><th>Kosten</th><th>Spenden</th><th>Kommentar</th>
+        </tr></thead>
+        <tbody id="reportTableBody"></tbody>
+        <tfoot id="reportTableFoot"></tfoot>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
 <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
   <div class="modal">
-    <div class="modal-header">
+    <div class="modal-hdr">
       <h2 id="modalTitle">Reparatur-Detail</h2>
       <button class="modal-close" onclick="closeModalDirect()">✕</button>
     </div>
@@ -347,206 +377,145 @@
 </div>
 
 <div id="toast"></div>
-
-<!-- Google Identity Services -->
 <script src="https://accounts.google.com/gsi/client" async></script>
-
 <script>
+// ── State ──────────────────────────────────────────────────────────────────
+let allData=[], filteredData=[], sortCol='datum', sortDir=1;
+let accessToken='';
+
 // ── Config ─────────────────────────────────────────────────────────────────
-const LS_CLIENT  = 'rcw_client_id';
-const LS_FILE    = 'rcw_file_id';
-const LS_TOKEN   = 'rcw_token';
-const SCOPE      = 'https://www.googleapis.com/auth/drive.readonly';
-
-let accessToken = '';
-let allData = [];
-let filteredData = [];
-let sortCol = 'datum';
-let sortDir = 1;
-
-// Load saved config
-window.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('clientIdInput').value = localStorage.getItem(LS_CLIENT) || '';
-  document.getElementById('fileIdInput').value   = localStorage.getItem(LS_FILE)   || '';
-  const savedToken = sessionStorage.getItem(LS_TOKEN);
-  if (savedToken) {
-    accessToken = savedToken;
-    setLoggedIn(sessionStorage.getItem('rcw_user') || '');
-    loadExcelFromDrive();
-  }
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('clientIdInput').value=localStorage.getItem('rcw_cid')||'';
+  document.getElementById('fileIdInput').value=localStorage.getItem('rcw_fid')||'';
+  const tok=sessionStorage.getItem('rcw_tok');
+  if(tok){accessToken=tok;setLoggedIn(sessionStorage.getItem('rcw_user')||'');loadExcelFromDrive();}
 });
-
-function saveConfig() {
-  const cid = document.getElementById('clientIdInput').value.trim();
-  const fid = document.getElementById('fileIdInput').value.trim();
-  if (!cid || !fid) { showToast('Bitte beide Felder ausfüllen.'); return; }
-  localStorage.setItem(LS_CLIENT, cid);
-  localStorage.setItem(LS_FILE, fid);
-  showToast('✅ Konfiguration gespeichert!');
+function saveConfig(){
+  const c=document.getElementById('clientIdInput').value.trim();
+  const f=document.getElementById('fileIdInput').value.trim();
+  if(!c||!f){showToast('Bitte beide Felder ausfüllen.');return;}
+  localStorage.setItem('rcw_cid',c);localStorage.setItem('rcw_fid',f);
+  showToast('✅ Gespeichert!');
 }
-
-function toggleConfigHelp() {
-  const el = document.getElementById('configHelp');
-  const t  = document.getElementById('configToggle');
-  if (el.style.display === 'none') { el.style.display = 'block'; t.textContent = 'Schliessen ▲'; }
-  else { el.style.display = 'none'; t.textContent = 'Wo finde ich die File-ID? ▼'; }
+function toggleCfgHelp(){
+  const e=document.getElementById('cfgHelp'),t=document.getElementById('cfgToggle');
+  if(e.style.display==='none'||!e.style.display){e.style.display='block';t.textContent='Schliessen ▲';}
+  else{e.style.display='none';t.textContent='Wo finde ich die File-ID? ▼';}
 }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
-function startLogin() {
-  const clientId = localStorage.getItem(LS_CLIENT) || document.getElementById('clientIdInput').value.trim();
-  if (!clientId) { showToast('⚠ Bitte zuerst die Google Client-ID eingeben und speichern.'); return; }
-  const fileId = localStorage.getItem(LS_FILE) || document.getElementById('fileIdInput').value.trim();
-  if (!fileId) { showToast('⚠ Bitte zuerst die Google Drive File-ID eingeben und speichern.'); return; }
-
-  // Use Google Identity Services token client
-  const tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: clientId,
-    scope: SCOPE,
-    callback: (resp) => {
-      if (resp.error) { showToast('Anmeldung fehlgeschlagen: ' + resp.error); return; }
-      accessToken = resp.access_token;
-      sessionStorage.setItem(LS_TOKEN, accessToken);
-      // Get user info
-      fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-        headers: { Authorization: 'Bearer ' + accessToken }
-      }).then(r => r.json()).then(u => {
-        const name = u.name || u.email || '';
-        sessionStorage.setItem('rcw_user', name);
-        setLoggedIn(name);
-        loadExcelFromDrive();
-      }).catch(() => {
-        setLoggedIn('');
-        loadExcelFromDrive();
-      });
+function startLogin(){
+  const cid=localStorage.getItem('rcw_cid')||document.getElementById('clientIdInput').value.trim();
+  const fid=localStorage.getItem('rcw_fid')||document.getElementById('fileIdInput').value.trim();
+  if(!cid){showToast('⚠ Bitte Client-ID eingeben und speichern.');return;}
+  if(!fid){showToast('⚠ Bitte File-ID eingeben und speichern.');return;}
+  const tc=google.accounts.oauth2.initTokenClient({
+    client_id:cid,scope:'https://www.googleapis.com/auth/drive.readonly',
+    callback:(r)=>{
+      if(r.error){showToast('Fehler: '+r.error);return;}
+      accessToken=r.access_token;sessionStorage.setItem('rcw_tok',accessToken);
+      fetch('https://www.googleapis.com/oauth2/v3/userinfo',{headers:{Authorization:'Bearer '+accessToken}})
+        .then(x=>x.json()).then(u=>{const n=u.name||u.email||'';sessionStorage.setItem('rcw_user',n);setLoggedIn(n);loadExcelFromDrive();})
+        .catch(()=>{setLoggedIn('');loadExcelFromDrive();});
     }
   });
-  tokenClient.requestAccessToken({ prompt: 'consent' });
+  tc.requestAccessToken({prompt:'consent'});
+}
+function setLoggedIn(name){
+  document.getElementById('loginBtn').style.display='none';
+  document.getElementById('logoutBtn').style.display='inline-block';
+  document.getElementById('reloadBtn').style.display='inline-block';
+  document.getElementById('userInfo').style.display='inline-block';
+  document.getElementById('userInfo').textContent=name?'👤 '+name:'';
+  document.getElementById('loginScreen').style.display='none';
+}
+function logout(){
+  accessToken='';sessionStorage.removeItem('rcw_tok');sessionStorage.removeItem('rcw_user');
+  document.getElementById('loginBtn').style.display='inline-flex';
+  document.getElementById('logoutBtn').style.display='none';
+  document.getElementById('reloadBtn').style.display='none';
+  document.getElementById('userInfo').style.display='none';
+  document.getElementById('loginScreen').style.display='block';
+  document.getElementById('loadingScreen').style.display='none';
+  document.getElementById('dataView').style.display='none';
+  document.getElementById('analyticsEmpty').style.display='block';
+  document.getElementById('analyticsContent').style.display='none';
+  document.getElementById('reportEmpty').style.display='block';
+  document.getElementById('reportView').style.display='none';
+  allData=[];filteredData=[];
 }
 
-function setLoggedIn(name) {
-  document.getElementById('loginBtn').style.display = 'none';
-  document.getElementById('logoutBtn').style.display = 'inline-block';
-  document.getElementById('reloadBtn').style.display = 'inline-block';
-  document.getElementById('userInfo').style.display = 'inline-block';
-  document.getElementById('userInfo').textContent = name ? `👤 ${name}` : '';
-  document.getElementById('loginScreen').style.display = 'none';
-}
-
-function logout() {
-  accessToken = '';
-  sessionStorage.removeItem(LS_TOKEN);
-  sessionStorage.removeItem('rcw_user');
-  document.getElementById('loginBtn').style.display = 'inline-flex';
-  document.getElementById('logoutBtn').style.display = 'none';
-  document.getElementById('reloadBtn').style.display = 'none';
-  document.getElementById('userInfo').style.display = 'none';
-  document.getElementById('loginScreen').style.display = 'block';
-  document.getElementById('loadingScreen').style.display = 'none';
-  document.getElementById('dataView').style.display = 'none';
-  document.getElementById('analyticsEmpty').style.display = 'block';
-  document.getElementById('analyticsContent').style.display = 'none';
-  allData = []; filteredData = [];
-}
-
-// ── Load Excel from Drive ──────────────────────────────────────────────────
-async function loadExcelFromDrive() {
-  const fileId = localStorage.getItem(LS_FILE) || document.getElementById('fileIdInput').value.trim();
-  if (!fileId) { showToast('⚠ Keine File-ID konfiguriert.'); return; }
-  if (!accessToken) { showToast('⚠ Bitte zuerst anmelden.'); return; }
-
-  document.getElementById('loginScreen').style.display = 'none';
-  document.getElementById('loadingScreen').style.display = 'block';
-  document.getElementById('dataView').style.display = 'none';
-
-  try {
-    const url = `https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`;
-    const resp = await fetch(url, { headers: { Authorization: 'Bearer ' + accessToken } });
-
-    if (resp.status === 401) {
-      showToast('Sitzung abgelaufen – bitte neu anmelden.');
-      logout(); return;
-    }
-    if (resp.status === 403) {
-      showToast('Kein Zugriff auf diese Datei. Stelle sicher, dass dein Google-Konto berechtigt ist.');
-      document.getElementById('loadingScreen').style.display = 'none';
-      document.getElementById('loginScreen').style.display = 'block';
-      return;
-    }
-    if (!resp.ok) {
-      throw new Error(`HTTP ${resp.status}: ${resp.statusText}`);
-    }
-
-    const arrayBuffer = await resp.arrayBuffer();
-    const wb = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    const raw = XLSX.utils.sheet_to_json(ws, { defval: '' });
-
-    allData = raw.map((r, i) => parseRow(r, i));
-    populateDropdowns();
-    applyFilters();
-
-    document.getElementById('loadingScreen').style.display = 'none';
-    document.getElementById('dataView').style.display = 'flex';
-    document.getElementById('analyticsEmpty').style.display = 'none';
-    document.getElementById('analyticsContent').style.display = 'flex';
-    renderAnalytics(allData);
-    showToast(`✅ ${allData.length} Einträge geladen`);
-
-  } catch(err) {
-    document.getElementById('loadingScreen').style.display = 'none';
-    document.getElementById('loginScreen').style.display = 'block';
-    showToast('Fehler: ' + err.message);
-    console.error(err);
+// ── Load Excel ─────────────────────────────────────────────────────────────
+async function loadExcelFromDrive(){
+  const fid=localStorage.getItem('rcw_fid')||document.getElementById('fileIdInput').value.trim();
+  if(!fid){showToast('⚠ Keine File-ID.');return;}
+  if(!accessToken){showToast('⚠ Bitte anmelden.');return;}
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('loadingScreen').style.display='block';
+  document.getElementById('dataView').style.display='none';
+  try{
+    const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`,
+      {headers:{Authorization:'Bearer '+accessToken}});
+    if(res.status===401){showToast('Sitzung abgelaufen.');logout();return;}
+    if(res.status===403){showToast('Kein Zugriff auf diese Datei.');document.getElementById('loadingScreen').style.display='none';document.getElementById('loginScreen').style.display='block';return;}
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    const ab=await res.arrayBuffer();
+    const wb=XLSX.read(ab,{type:'array',cellDates:true});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const raw=XLSX.utils.sheet_to_json(ws,{defval:''});
+    // Datum der vorherigen Zeile übernehmen wenn leer
+    let lastDatum='';
+    allData=raw.map((r,i)=>{
+      const row=parseRow(r,i,lastDatum);
+      if(row.datum) lastDatum=row.datum;
+      return row;
+    });
+    populateDropdowns();applyFilters();
+    document.getElementById('loadingScreen').style.display='none';
+    document.getElementById('dataView').style.display='flex';
+    document.getElementById('analyticsEmpty').style.display='none';
+    document.getElementById('analyticsContent').style.display='flex';
+    renderAnalytics(allData,'statsGrid','chartsGrid');
+    showToast('✅ '+allData.length+' Einträge geladen');
+  }catch(e){
+    document.getElementById('loadingScreen').style.display='none';
+    document.getElementById('loginScreen').style.display='block';
+    showToast('Fehler: '+e.message);
   }
 }
 
-// ── Parse row ──────────────────────────────────────────────────────────────
-function parseRow(r, i) {
-  const get = (...keys) => {
-    const rowKeys = Object.keys(r);
-    // 1. Exakter Treffer (case-insensitiv)
-    for (const k of keys) {
-      const kl = k.toLowerCase().trim();
-      for (const rk of rowKeys)
-        if (rk.trim().toLowerCase() === kl) return r[rk];
-    }
-    // 2. Partieller Treffer: Spaltenname enthaelt Suchbegriff (z.B. "Kosten [CHF]" enthaelt "Kosten")
-    for (const k of keys) {
-      const kl = k.toLowerCase().trim();
-      for (const rk of rowKeys)
-        if (rk.trim().toLowerCase().includes(kl)) return r[rk];
-    }
+// ── Parse ──────────────────────────────────────────────────────────────────
+function parseRow(r,i,lastDatum=''){
+  const get=(...keys)=>{
+    const rk=Object.keys(r);
+    for(const k of keys){const kl=k.toLowerCase().trim();for(const x of rk)if(x.trim().toLowerCase()===kl)return r[x];}
+    for(const k of keys){const kl=k.toLowerCase().trim();for(const x of rk)if(x.trim().toLowerCase().includes(kl))return r[x];}
     return '';
   };
-  const raw_datum = get('Datum','Date');
-  let datum = '';
-  if (raw_datum instanceof Date) datum = raw_datum.toISOString().split('T')[0];
-  else if (typeof raw_datum === 'string' && raw_datum) datum = raw_datum.trim();
-  else if (typeof raw_datum === 'number') {
-    const d = new Date(Math.round((raw_datum - 25569) * 86400 * 1000));
-    datum = d.toISOString().split('T')[0];
-  }
-  const kostenRaw  = get('Kosten [CHF]','Kosten CHF','Kosten');
-  const spendenRaw = get('Spenden [CHF]','Spenden CHF','Spenden');
-  const kosten  = parseFloat(String(kostenRaw).replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
-  const spenden = parseFloat(String(spendenRaw).replace(/[^0-9.,]/g,'').replace(',','.')) || 0;
-  const plz = String(get('PLZ')).trim();
-  return {
-    nr:         String(get('Nr.','Nr','nr','Nummer') || (i+1)),
-    datum, plz,
-    ort:        ortVonPlz(plz),
-    name:       String(get('Name','name')).trim(),
-    geraet:     String(get('Gerät','Geraet','geraet')).trim(),
-    kategorie:  String(get('Kategorie','kategorie')).trim(),
-    status:     String(get('Status','status')).trim(),
-    triage:     String(get('Triage','triage')).trim(),
-    reparateur: String(get('Reparateur','reparateur')).trim(),
-    repariert:  String(get('Repariert','repariert')).trim(),
-    defekt:     String(get('Defekt','defekt')).trim(),
-    erledigt:   String(get('Erledigt','erledigt')).trim(),
-    kosten, spenden,
-    kommentar:  String(get('Kommentar','kommentar','Bemerkung','Notiz')).trim(),
+  const rd=get('Datum','Date');
+  let datum='';
+  if(rd instanceof Date)datum=rd.toISOString().split('T')[0];
+  else if(typeof rd==='string'&&rd)datum=rd.trim();
+  else if(typeof rd==='number'){const d=new Date(Math.round((rd-25569)*86400*1000));datum=d.toISOString().split('T')[0];}
+  if(!datum&&lastDatum)datum=lastDatum; // Datum von Vorgängerzeile übernehmen
+  const kr=get('Kosten [CHF]','Kosten CHF','Kosten');
+  const sr=get('Spenden [CHF]','Spenden CHF','Spenden');
+  const kosten=parseFloat(String(kr).replace(/[^0-9.,]/g,'').replace(',','.'))||0;
+  const spenden=parseFloat(String(sr).replace(/[^0-9.,]/g,'').replace(',','.'))||0;
+  const plz=String(get('PLZ')).trim();
+  return{
+    nr:String(get('Nr.','Nr','Nummer')||(i+1)),datum,plz,ort:ortVonPlz(plz),
+    name:String(get('Name')).trim(),
+    geraet:String(get('Gerät','Geraet','Gerät')).trim(),
+    kategorie:String(get('Kategorie')).trim(),
+    status:String(get('Status')).trim(),
+    triage:String(get('Triage')).trim(),
+    reparateur:String(get('Reparateur')).trim(),
+    repariert:String(get('Repariert')).trim(),
+    defekt:String(get('Defekt')).trim(),
+    erledigt:String(get('Erledigt','Abholen')).trim(),
+    kosten,spenden,
+    kommentar:String(get('Kommentar','Bemerkung')).trim(),
   };
 }
 
@@ -1105,211 +1074,236 @@ function ortVonPlz(plz) {
 }
 
 // ── Dropdowns ──────────────────────────────────────────────────────────────
-function populateDropdowns() {
-  fillSelect('f_status',    [...new Set(allData.map(r=>r.status).filter(Boolean))].sort());
-  fillSelect('f_kategorie', [...new Set(allData.map(r=>r.kategorie).filter(Boolean))].sort());
-  fillSelect('f_triage',    [...new Set(allData.map(r=>r.triage).filter(Boolean))].sort());
+function populateDropdowns(){
+  fillSel('f_status',[...new Set(allData.map(r=>r.status).filter(Boolean))].sort());
+  fillSel('f_kategorie',[...new Set(allData.map(r=>r.kategorie).filter(Boolean))].sort());
+  fillSel('f_triage',[...new Set(allData.map(r=>r.triage).filter(Boolean))].sort());
 }
-function fillSelect(id, values) {
-  const sel = document.getElementById(id);
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">Alle</option>';
-  values.forEach(v => { const o = document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o); });
-  if (values.includes(cur)) sel.value = cur;
+function fillSel(id,vals){
+  const s=document.getElementById(id),c=s.value;
+  s.innerHTML='<option value="">Alle</option>';
+  vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
+  if(vals.includes(c))s.value=c;
 }
 
 // ── Filters ────────────────────────────────────────────────────────────────
-function applyFilters() {
-  const von   = document.getElementById('f_von').value;
-  const bis   = document.getElementById('f_bis').value;
-  const name  = document.getElementById('f_name').value.toLowerCase().trim();
-  const plz   = document.getElementById('f_plz').value.trim();
-  const rep   = document.getElementById('f_rep').value.toLowerCase().trim();
-  const status  = document.getElementById('f_status').value.toLowerCase();
-  const kat     = document.getElementById('f_kategorie').value.toLowerCase();
-  const triage  = document.getElementById('f_triage').value.toLowerCase();
-  const sMin  = parseFloat(document.getElementById('f_spenden_min').value) || 0;
-  const kMin  = parseFloat(document.getElementById('f_kosten_min').value) || 0;
-
-  filteredData = allData.filter(r => {
-    if (von && r.datum && r.datum < von) return false;
-    if (bis && r.datum && r.datum > bis) return false;
-    if (name && !r.name.toLowerCase().includes(name)) return false;
-    if (plz  && !r.plz.startsWith(plz)) return false;
-    if (rep  && !r.reparateur.toLowerCase().includes(rep)) return false;
-    if (status && r.status.toLowerCase() !== status) return false;
-    if (kat  && r.kategorie.toLowerCase() !== kat) return false;
-    if (triage && r.triage.toLowerCase() !== triage) return false;
-    if (r.spenden < sMin) return false;
-    if (r.kosten  < kMin) return false;
+function applyFilters(){
+  const von=document.getElementById('f_von').value;
+  const bis=document.getElementById('f_bis').value;
+  const name=document.getElementById('f_name').value.toLowerCase().trim();
+  const plz=document.getElementById('f_plz').value.trim();
+  const rep=document.getElementById('f_rep').value.toLowerCase().trim();
+  const status=document.getElementById('f_status').value.toLowerCase();
+  const kat=document.getElementById('f_kategorie').value.toLowerCase();
+  const triage=document.getElementById('f_triage').value.toLowerCase();
+  const sMin=parseFloat(document.getElementById('f_spenden_min').value)||0;
+  const kMin=parseFloat(document.getElementById('f_kosten_min').value)||0;
+  filteredData=allData.filter(r=>{
+    if(von&&r.datum&&r.datum<von)return false;
+    if(bis&&r.datum&&r.datum>bis)return false;
+    if(name&&!r.name.toLowerCase().includes(name))return false;
+    if(plz&&!r.plz.startsWith(plz))return false;
+    if(rep&&!r.reparateur.toLowerCase().includes(rep))return false;
+    if(status&&r.status.toLowerCase()!==status)return false;
+    if(kat&&r.kategorie.toLowerCase()!==kat)return false;
+    if(triage&&r.triage.toLowerCase()!==triage)return false;
+    if(r.spenden<sMin)return false;
+    if(r.kosten<kMin)return false;
     return true;
   });
-  sortData(); renderTable();
-  document.getElementById('countBadge').textContent = filteredData.length;
-  document.getElementById('countLabel').textContent = filteredData.length === 1 ? 'Eintrag gefunden' : 'Einträge gefunden';
+  sortData();renderTable();
+  document.getElementById('countBadge').textContent=filteredData.length;
+  document.getElementById('countLabel').textContent=filteredData.length===1?'Eintrag gefunden':'Einträge gefunden';
 }
-
-function resetFilters() {
-  ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min'].forEach(id => document.getElementById(id).value='');
-  ['f_status','f_kategorie','f_triage'].forEach(id => document.getElementById(id).value='');
+function resetFilters(){
+  ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min'].forEach(id=>document.getElementById(id).value='');
+  ['f_status','f_kategorie','f_triage'].forEach(id=>document.getElementById(id).value='');
   applyFilters();
 }
 
-// ── Sort & render ──────────────────────────────────────────────────────────
-function sortBy(col) {
-  if (sortCol === col) sortDir = -sortDir; else { sortCol=col; sortDir=1; }
-  document.querySelectorAll('thead th').forEach(th => th.classList.remove('sorted'));
-  const th = document.querySelector(`thead th[data-col="${col}"]`);
-  if (th) th.classList.add('sorted');
-  sortData(); renderTable();
+// ── Sort & Render ──────────────────────────────────────────────────────────
+function sortBy(col){
+  if(sortCol===col)sortDir=-sortDir;else{sortCol=col;sortDir=1;}
+  document.querySelectorAll('thead th').forEach(t=>t.classList.remove('sorted'));
+  const th=document.querySelector(`thead th[data-col="${col}"]`);
+  if(th)th.classList.add('sorted');
+  document.getElementById('sortInfo').textContent='Sortiert: '+col;
+  sortData();renderTable();
 }
-function sortData() {
-  filteredData.sort((a,b) => {
-    let va=a[sortCol], vb=b[sortCol];
-    if (sortCol==='kosten'||sortCol==='spenden') return sortDir*(va-vb);
-    if (sortCol==='nr') return sortDir*(parseInt(va)-parseInt(vb));
-    va=String(va).toLowerCase(); vb=String(vb).toLowerCase();
+function sortData(){
+  filteredData.sort((a,b)=>{
+    let va=a[sortCol],vb=b[sortCol];
+    if(sortCol==='kosten'||sortCol==='spenden')return sortDir*(va-vb);
+    if(sortCol==='nr')return sortDir*(parseInt(va)-parseInt(vb));
+    va=String(va).toLowerCase();vb=String(vb).toLowerCase();
     return sortDir*va.localeCompare(vb,'de');
   });
 }
-function renderTable() {
-  const tbody = document.getElementById('tableBody');
-  if (!filteredData.length) {
-    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:40px;color:var(--ink-soft);">Keine Einträge gefunden</td></tr>';
-    return;
-  }
-  tbody.innerHTML = filteredData.map((r,i) => `
+function renderTable(){
+  const tb=document.getElementById('tableBody');
+  if(!filteredData.length){tb.innerHTML='<tr><td colspan="11" style="text-align:center;padding:36px;color:var(--soft)">Keine Einträge gefunden</td></tr>';return;}
+  tb.innerHTML=filteredData.map((r,i)=>`
     <tr onclick="openDetail(${i})">
       <td class="ref">#${r.nr}</td>
-      <td>${formatDate(r.datum)}</td>
+      <td>${fmtDate(r.datum)}</td>
       <td>${esc(r.name)}</td>
-      <td>${esc(r.plz)}${r.ort?`<br><small style="color:var(--ink-soft)">${esc(r.ort)}</small>`:''}</td>
+      <td>${esc(r.plz)}${r.ort?'<br><small style="color:var(--soft)">'+esc(r.ort)+'</small>':''}</td>
       <td>${esc(r.geraet)}</td>
       <td>${esc(r.kategorie)}</td>
-      <td>${statusBadge(r.status)}</td>
+      <td>${badge(r.status)}</td>
       <td>${esc(r.triage)}</td>
       <td>${esc(r.reparateur)}</td>
-      <td class="kosten">${r.kosten>0?r.kosten.toFixed(2):'—'}</td>
-      <td class="spenden">${r.spenden>0?r.spenden.toFixed(2):'—'}</td>
+      <td class="num">${r.kosten>0?r.kosten.toFixed(2):'—'}</td>
+      <td class="spen">${r.spenden>0?r.spenden.toFixed(2):'—'}</td>
     </tr>`).join('');
 }
 
-function statusBadge(s) {
-  if (!s) return '<span class="badge badge-default">—</span>';
-  const sl=s.toLowerCase();
-  let cls='badge-default';
-  if (sl.includes('repariert')&&!sl.includes('un')) cls='badge-repariert';
-  else if (sl.includes('unrepariert')||sl.includes('nicht')) cls='badge-unrepariert';
-  else if (sl.includes('triage')) cls='badge-triage';
-  else if (sl.includes('warte')||sl.includes('offen')||sl.includes('pend')) cls='badge-wartet';
-  return `<span class="badge ${cls}">${esc(s)}</span>`;
-}
-function formatDate(d) {
-  if (!d) return '—';
-  const p=d.split('-');
-  return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:d;
-}
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
 // ── Detail modal ───────────────────────────────────────────────────────────
-function openDetail(i) {
+function openDetail(i){
   const r=filteredData[i];
-  document.getElementById('modalTitle').textContent=`Reparatur #${r.nr} – ${r.name||''}`;
+  document.getElementById('modalTitle').textContent=`Reparatur #${r.nr} – ${r.name||''} `;
   document.getElementById('modalBody').innerHTML=`
     <div class="detail-grid">
-      <div class="detail-item"><div class="dl">Ref.-Nr.</div><div class="dv">#${esc(r.nr)}</div></div>
-      <div class="detail-item"><div class="dl">Datum</div><div class="dv">${formatDate(r.datum)}</div></div>
-      <div class="detail-item"><div class="dl">Kundin/Kunde</div><div class="dv">${esc(r.name)}</div></div>
-      <div class="detail-item"><div class="dl">PLZ / Ort</div><div class="dv">${esc(r.plz)} ${esc(r.ort)}</div></div>
-      <div class="detail-item"><div class="dl">Gegenstand</div><div class="dv">${esc(r.geraet)}</div></div>
-      <div class="detail-item"><div class="dl">Kategorie</div><div class="dv">${esc(r.kategorie)}</div></div>
-      <div class="detail-item"><div class="dl">Status</div><div class="dv">${statusBadge(r.status)}</div></div>
-      <div class="detail-item"><div class="dl">Triage</div><div class="dv">${esc(r.triage)}</div></div>
-      <div class="detail-item"><div class="dl">Reparateur</div><div class="dv">${esc(r.reparateur)}</div></div>
-      <div class="detail-item"><div class="dl">Repariert</div><div class="dv">${esc(r.repariert)}</div></div>
-      <div class="detail-item"><div class="dl">Defekt</div><div class="dv">${esc(r.defekt)}</div></div>
-      <div class="detail-item"><div class="dl">Erledigt</div><div class="dv">${esc(r.erledigt)}</div></div>
-      <div class="detail-item"><div class="dl">Kosten (CHF)</div><div class="dv">${r.kosten>0?r.kosten.toFixed(2):'—'}</div></div>
-      <div class="detail-item"><div class="dl">Spenden (CHF)</div><div class="dv">${r.spenden>0?r.spenden.toFixed(2):'—'}</div></div>
-      ${r.kommentar?`<div class="detail-item full"><div class="dl">Kommentar</div><div class="dv comment">${esc(r.kommentar)}</div></div>`:''}
+      <div class="di"><div class="dl">Ref.-Nr.</div><div class="dv">#${esc(r.nr)}</div></div>
+      <div class="di"><div class="dl">Datum</div><div class="dv">${fmtDate(r.datum)}</div></div>
+      <div class="di"><div class="dl">Kundin/Kunde</div><div class="dv">${esc(r.name)}</div></div>
+      <div class="di"><div class="dl">PLZ / Ort</div><div class="dv">${esc(r.plz)} ${esc(r.ort)}</div></div>
+      <div class="di"><div class="dl">Gegenstand</div><div class="dv">${esc(r.geraet)}</div></div>
+      <div class="di"><div class="dl">Kategorie</div><div class="dv">${esc(r.kategorie)}</div></div>
+      <div class="di"><div class="dl">Status</div><div class="dv">${badge(r.status)}</div></div>
+      <div class="di"><div class="dl">Triage</div><div class="dv">${esc(r.triage)}</div></div>
+      <div class="di"><div class="dl">Reparateur</div><div class="dv">${esc(r.reparateur)}</div></div>
+      <div class="di"><div class="dl">Repariert</div><div class="dv">${esc(r.repariert)}</div></div>
+      <div class="di"><div class="dl">Defekt</div><div class="dv">${esc(r.defekt)}</div></div>
+      <div class="di"><div class="dl">Erledigt/Abholen</div><div class="dv">${esc(r.erledigt)}</div></div>
+      <div class="di"><div class="dl">Kosten CHF</div><div class="dv">${r.kosten>0?r.kosten.toFixed(2):'—'}</div></div>
+      <div class="di"><div class="dl">Spenden CHF</div><div class="dv">${r.spenden>0?r.spenden.toFixed(2):'—'}</div></div>
+      ${r.kommentar?`<div class="di full"><div class="dl">Kommentar</div><div class="dv cmt">${esc(r.kommentar)}</div></div>`:''}
     </div>`;
   document.getElementById('modalOverlay').classList.add('open');
 }
-function closeModal(e) { if(e.target===document.getElementById('modalOverlay')) closeModalDirect(); }
-function closeModalDirect() { document.getElementById('modalOverlay').classList.remove('open'); }
+function closeModal(e){if(e.target===document.getElementById('modalOverlay'))closeModalDirect();}
+function closeModalDirect(){document.getElementById('modalOverlay').classList.remove('open');}
 
 // ── Analytics ──────────────────────────────────────────────────────────────
-function renderAnalytics(data) {
+function renderAnalytics(data,sgId,cgId){
   const total=data.length;
   const rep=data.filter(r=>r.status.toLowerCase().includes('repariert')&&!r.status.toLowerCase().includes('un')).length;
   const rate=total>0?Math.round(rep/total*100):0;
-  const tSpenden=data.reduce((s,r)=>s+r.spenden,0);
-  const tKosten =data.reduce((s,r)=>s+r.kosten,0);
-  const mitSpende=data.filter(r=>r.spenden>0).length;
-  document.getElementById('statsGrid').innerHTML=
-    statCard('Total Reparaturen',total,'')+
-    statCard('Repariert',rep,`${rate}% Erfolgsrate`)+
-    statCard('Total Spenden','CHF '+tSpenden.toFixed(0),`Ø CHF ${mitSpende>0?(tSpenden/mitSpende).toFixed(0):0} je Spende`)+
-    statCard('Total Kosten','CHF '+tKosten.toFixed(0),'');
-  document.getElementById('chartsGrid').innerHTML=
-    barChartCard('Status',countBy(data,'status'))+
-    barChartCard('Kategorie',countBy(data,'kategorie'))+
-    barChartCard('Reparateur',countBy(data,'reparateur'))+
-    barChartCard('Triage',countBy(data,'triage'));
+  const tSp=data.reduce((s,r)=>s+r.spenden,0);
+  const tKo=data.reduce((s,r)=>s+r.kosten,0);
+  const mSp=data.filter(r=>r.spenden>0).length;
+  document.getElementById(sgId).innerHTML=
+    sc('Total Reparaturen',total,'')+
+    sc('Repariert',rep,rate+'% Erfolgsrate')+
+    sc('Total Spenden','CHF '+tSp.toFixed(0),'Ø CHF '+(mSp>0?(tSp/mSp).toFixed(0):0))+
+    sc('Total Kosten','CHF '+tKo.toFixed(0),'');
+  document.getElementById(cgId).innerHTML=
+    bc('Status',countBy(data,'status'))+
+    bc('Kategorie',countBy(data,'kategorie'))+
+    bc('Reparateur',countBy(data,'reparateur'))+
+    bc('Triage',countBy(data,'triage'));
 }
-function statCard(label,value,sub) {
-  return `<div class="stat-card"><div class="label">${label}</div><div class="value">${value}</div>${sub?`<div class="sub">${sub}</div>`:''}</div>`;
-}
-function countBy(data,field) {
-  const c={};
-  data.forEach(r=>{ const v=r[field]||'(leer)'; c[v]=(c[v]||0)+1; });
-  return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,12);
-}
-function barChartCard(title,entries) {
-  if(!entries.length) return '';
-  const max=entries[0][1];
-  return `<div class="chart-card"><h3>${title}</h3><div class="bar-chart">${entries.map(([l,n])=>`
+function sc(l,v,s){return`<div class="stat-card"><div class="lbl">${l}</div><div class="val">${v}</div>${s?`<div class="sub">${s}</div>`:''}</div>`;}
+function countBy(data,f){const c={};data.forEach(r=>{const v=r[f]||'(leer)';c[v]=(c[v]||0)+1;});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,12);}
+function bc(title,entries){
+  if(!entries.length)return '';
+  const mx=entries[0][1];
+  return`<div class="chart-card"><h3>${title}</h3><div class="bar-chart">${entries.map(([l,n])=>`
     <div class="bar-row">
-      <div class="bar-label" title="${esc(l)}">${esc(l)}</div>
-      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/max*100)}%"></div></div>
-      <div class="bar-count">${n}</div>
+      <div class="bar-lbl" title="${esc(l)}">${esc(l)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%"></div></div>
+      <div class="bar-cnt">${n}</div>
     </div>`).join('')}</div></div>`;
 }
 
+// ── Report ─────────────────────────────────────────────────────────────────
+function openReport(){
+  if(!filteredData.length){showToast('Keine Daten für den Report.');return;}
+  // Switch to report tab
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
+  document.querySelector('[data-tab="report"]').classList.add('active');
+  document.getElementById('tab-report').classList.add('active');
+  renderReport();
+}
+function renderReport(){
+  if(!filteredData.length){
+    document.getElementById('reportEmpty').style.display='block';
+    document.getElementById('reportView').style.display='none';
+    return;
+  }
+  document.getElementById('reportEmpty').style.display='none';
+  document.getElementById('reportView').style.display='flex';
+
+  // Title & subtitle
+  const von=document.getElementById('f_von').value;
+  const bis=document.getElementById('f_bis').value;
+  let sub='Erstellt am '+new Date().toLocaleDateString('de-CH');
+  if(von||bis)sub+=' | Zeitraum: '+(von?fmtDate(von):'–')+' bis '+(bis?fmtDate(bis):'–');
+  sub+=' | '+filteredData.length+' Einträge';
+  document.getElementById('reportSubtitle').textContent=sub;
+
+  // Stats & Charts
+  renderAnalytics(filteredData,'rStatsGrid','rChartsGrid');
+
+  // Detail table
+  const tb=document.getElementById('reportTableBody');
+  tb.innerHTML=filteredData.map(r=>`
+    <tr>
+      <td>#${esc(r.nr)}</td>
+      <td style="white-space:nowrap">${fmtDate(r.datum)}</td>
+      <td>${esc(r.name)}</td>
+      <td>${esc(r.plz)}${r.ort?' '+esc(r.ort):''}</td>
+      <td>${esc(r.geraet)}</td>
+      <td>${esc(r.kategorie)}</td>
+      <td>${esc(r.status)}</td>
+      <td>${esc(r.reparateur)}</td>
+      <td class="rnum">${r.kosten>0?r.kosten.toFixed(2):''}</td>
+      <td class="rnum" style="color:var(--g2);font-weight:600">${r.spenden>0?r.spenden.toFixed(2):''}</td>
+      <td style="font-size:.7rem;color:var(--soft)">${esc(r.kommentar)}</td>
+    </tr>`).join('');
+
+  // Footer totals
+  const tK=filteredData.reduce((s,r)=>s+r.kosten,0);
+  const tS=filteredData.reduce((s,r)=>s+r.spenden,0);
+  document.getElementById('reportTableFoot').innerHTML=`
+    <tr>
+      <td colspan="8" style="text-align:right">Total:</td>
+      <td class="rnum">${tK.toFixed(2)}</td>
+      <td class="rnum" style="color:var(--g2)">${tS.toFixed(2)}</td>
+      <td></td>
+    </tr>`;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function badge(s){
+  if(!s)return'<span class="badge b-def">—</span>';
+  const sl=s.toLowerCase();
+  let c='b-def';
+  if(sl.includes('repariert')&&!sl.includes('un'))c='b-rep';
+  else if(sl.includes('unrepariert')||sl.includes('nicht'))c='b-unr';
+  else if(sl.includes('triage'))c='b-tri';
+  else if(sl.includes('warte')||sl.includes('offen')||sl.includes('pend'))c='b-war';
+  return`<span class="badge ${c}">${esc(s)}</span>`;
+}
+function fmtDate(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:d;}
+function esc(s){return String(s||''). replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function showToast(m){const t=document.getElementById('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3500);}
+
 // ── Tabs ───────────────────────────────────────────────────────────────────
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click',()=>{
     document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c=>c.classList.remove('active'));
     btn.classList.add('active');
-    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+    const tab=document.getElementById('tab-'+btn.dataset.tab);
+    tab.classList.add('active');
+    if(btn.dataset.tab==='report'&&filteredData.length)renderReport();
   });
 });
 
-// ── Mobile drawer ──────────────────────────────────────────────────────────
-function openDrawer() {
-  const df=document.getElementById('drawerFilters');
-  df.innerHTML=document.getElementById('sidebar').innerHTML;
-  df.querySelectorAll('.btn-reset').forEach(b=>b.remove());
-  df.querySelectorAll('input,select').forEach(el=>{
-    const orig=document.getElementById(el.id);
-    if(orig){ el.value=orig.value;
-      el.addEventListener('input',()=>{orig.value=el.value; applyFilters();});
-      el.addEventListener('change',()=>{orig.value=el.value; applyFilters();});
-    }
-  });
-  document.getElementById('filterDrawer').classList.add('open');
-}
-function closeDrawer() { document.getElementById('filterDrawer').classList.remove('open'); }
-
-// ── Toast ──────────────────────────────────────────────────────────────────
-function showToast(msg) {
-  const t=document.getElementById('toast');
-  t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),3500);
-}
-
-document.addEventListener('keydown', e=>{ if(e.key==='Escape'){closeModalDirect();closeDrawer();} });
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();});
 </script>
 </body>
 </html>
