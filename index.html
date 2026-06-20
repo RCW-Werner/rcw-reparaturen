@@ -262,7 +262,9 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
       <div><label style="display:block;font-size:.76rem;color:#5D4037;margin-bottom:2px">Google Client-ID</label>
         <input type="text" id="clientIdInput" placeholder="12345...apps.googleusercontent.com"></div>
       <div><label style="display:block;font-size:.76rem;color:#5D4037;margin-bottom:2px">Google Drive File-ID</label>
-        <input type="text" id="fileIdInput" placeholder="1BxiMVs0XRA5nFMdK..."></div>
+        <input type="text" id="fileIdInput" placeholder="1BxiMVs0XRA5nFMdK...">
+      <label style="display:block;font-size:.76rem;color:#5D4037;margin-bottom:2px">Google API Key (für Passwort-Login)</label>
+      <input type="text" id="apiKeyInput" placeholder="AIzaSy..." style="width:300px;max-width:100%"></div>
       <button class="btn-cfg" onclick="saveConfig()" style="margin-top:18px">Speichern</button>
     </div>
     <div class="cfg-hint">💡 Einmalig eingeben und speichern. Für Passwort-Benutzer: Excel-Datei auf Google Drive als <strong>„Jeder mit Link – Betrachter"</strong> freigeben.
@@ -541,6 +543,7 @@ let accessToken='';
 window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('clientIdInput').value=localStorage.getItem('rcw_cid')||'';
   document.getElementById('fileIdInput').value=localStorage.getItem('rcw_fid')||'';
+  document.getElementById('apiKeyInput').value=localStorage.getItem('rcw_apikey')||'';
   const tok=sessionStorage.getItem('rcw_tok');
   if(tok){accessToken=tok;setLoggedIn(sessionStorage.getItem('rcw_user')||'');loadExcelFromDrive();}
   const pwSess=sessionStorage.getItem('rcw_pw_user');
@@ -557,7 +560,9 @@ function saveConfig(){
   const c=document.getElementById('clientIdInput').value.trim();
   const f=document.getElementById('fileIdInput').value.trim();
   if(!c||!f){showToast('Bitte beide Felder ausfüllen.');return;}
+  const ak=document.getElementById('apiKeyInput').value.trim();
   localStorage.setItem('rcw_cid',c);localStorage.setItem('rcw_fid',f);
+  if(ak)localStorage.setItem('rcw_apikey',ak);
   showToast('✅ Gespeichert!');
 }
 function toggleCfgHelp(){
@@ -627,13 +632,16 @@ async function loadExcelFromDrive(){
       res=await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`,
         {headers:{Authorization:'Bearer '+accessToken}});
     } else {
-      // Passwort-Login: Google Drive Export-URL (benötigt "Jeder mit Link" Freigabe)
-      // Versuche zuerst direkte Export-URL
-      res=await fetch(`https://drive.google.com/uc?export=download&id=${fid}&confirm=t`);
-      if(!res.ok){
-        // Fallback: Docs-Export
-        res=await fetch(`https://docs.google.com/spreadsheets/d/${fid}/export?format=xlsx`);
+      // Passwort-Login: Google Drive API mit API Key
+      // Datei muss auf Google Drive als "Jeder mit Link – Betrachter" freigegeben sein
+      const apiKey=localStorage.getItem('rcw_apikey')||'';
+      if(!apiKey){
+        showToast('⚠ Bitte Google API Key in der Konfiguration eintragen.');
+        document.getElementById('loadingScreen').style.display='none';
+        document.getElementById('loginScreen').style.display='block';
+        return;
       }
+      res=await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media&key=${apiKey}`);
     }
     if(res.status===401){showToast('Sitzung abgelaufen.');logout();return;}
     if(res.status===403){showToast('Kein Zugriff auf diese Datei.');document.getElementById('loadingScreen').style.display='none';document.getElementById('loginScreen').style.display='block';return;}
