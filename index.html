@@ -231,13 +231,11 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 
 <!-- Filter Bar – global über allen Tabs -->
 <div class="filter-bar" id="globalFilterBar">
-  <div class="fb-group">
+  <div class="fb-group" style="min-width:200px">
     <label>Zeitraum</label>
-    <div class="qs-row">
+    <div class="qs-row" id="qsRow">
       <button class="qs-btn" onclick="setZeitraum('monat')">Akt. Monat</button>
       <button class="qs-btn" onclick="setZeitraum('letztermonat')">Letzter Monat</button>
-      <button class="qs-btn" onclick="setZeitraum('jahr')">Akt. Jahr</button>
-      <button class="qs-btn" onclick="setZeitraum('letztesJahr')">Letztes Jahr</button>
       <button class="qs-btn" onclick="setZeitraum('alle')">Alle</button>
     </div>
   </div>
@@ -491,6 +489,7 @@ async function loadExcelFromDrive(){
       return row;
     });
     populateDropdowns();
+    buildYearButtons();
     // Start- und Enddatum aus Tabelle übernehmen
     // Nur gültige ISO-Daten (yyyy-mm-dd) berücksichtigen und korrekt sortieren
     const daten=allData
@@ -1148,6 +1147,26 @@ function fillSel(id,vals){
 }
 
 // ── Zeitraum Schnellwahl ──────────────────────────────────────────────────
+function buildYearButtons(){
+  // Vorhandene Jahre aus den Daten ermitteln
+  const jahre=[...new Set(
+    allData.map(r=>r.datum).filter(d=>d&&/^\d{4}/.test(d)).map(d=>d.substring(0,4))
+  )].sort();
+  const row=document.getElementById('qsRow');
+  if(!row)return;
+  // Bestehende Jahr-Buttons entfernen (class 'qs-year')
+  row.querySelectorAll('.qs-year').forEach(b=>b.remove());
+  // Neue Jahr-Buttons vor "Alle" einfügen
+  const alleBtn=row.querySelector('[onclick*="alle"]');
+  jahre.forEach(jahr=>{
+    const btn=document.createElement('button');
+    btn.className='qs-btn qs-year';
+    btn.textContent=jahr;
+    btn.onclick=()=>setZeitraum('jahr:'+jahr);
+    row.insertBefore(btn,alleBtn);
+  });
+}
+
 function setZeitraum(mode){
   const now=new Date();
   let von='',bis='';
@@ -1157,22 +1176,19 @@ function setZeitraum(mode){
   } else if(mode==='letztermonat'){
     von=fmt(new Date(now.getFullYear(),now.getMonth()-1,1));
     bis=fmt(new Date(now.getFullYear(),now.getMonth(),0));
-  } else if(mode==='jahr'){
-    von=fmt(new Date(now.getFullYear(),0,1));
-    bis=fmt(new Date(now.getFullYear(),11,31));
-  } else if(mode==='letztesJahr'){
-    von=fmt(new Date(now.getFullYear()-1,0,1));
-    bis=fmt(new Date(now.getFullYear()-1,11,31));
   } else if(mode==='alle'){
     von=''; bis='';
+  } else if(mode.startsWith('jahr:')){
+    // Spezifisches Jahr
+    const jahr=parseInt(mode.split(':')[1]);
+    von=jahr+'-01-01';
+    bis=jahr+'-12-31';
   }
   document.getElementById('f_von').value=von;
   document.getElementById('f_bis').value=bis;
-  // Highlight active button
+  // Aktiven Button hervorheben
   document.querySelectorAll('.qs-btn').forEach(b=>b.classList.remove('active'));
-  const map={monat:0,letztermonat:1,jahr:2,letztesJahr:3,alle:4};
-  const btns=document.querySelectorAll('.qs-btn');
-  if(btns[map[mode]])btns[map[mode]].classList.add('active');
+  event.target.classList.add('active');
   applyFilters();
 }
 function clearQS(){
