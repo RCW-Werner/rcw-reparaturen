@@ -168,6 +168,39 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 .qs-btn.active{background:var(--g1);color:#fff;border-color:var(--g1)}
 .filter-bar{background:var(--white);border-bottom:2px solid var(--border);padding:10px 20px;display:flex;flex-wrap:wrap;gap:8px;align-items:flex-end;position:sticky;top:56px;z-index:90;box-shadow:0 2px 6px rgba(0,0,0,.07)}
 
+/* DUAL LOGIN */
+.login-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px}
+.login-tab{flex:1;padding:8px;background:none;border:none;font-size:.85rem;font-weight:600;color:var(--soft);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.login-tab.active{color:var(--g1);border-bottom-color:var(--g1)}
+.login-panel{display:none}.login-panel.active{display:block}
+.login-input{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:6px;font-size:.9rem;margin-bottom:10px}
+.login-input:focus{outline:none;border-color:var(--g2)}
+.btn-login{width:100%;padding:10px;background:var(--g1);color:#fff;border:none;border-radius:6px;font-size:.9rem;font-weight:700;cursor:pointer;margin-top:4px}
+.btn-login:hover{background:var(--g2)}
+.login-error{color:#dc2626;font-size:.8rem;margin-top:6px;display:none}
+/* ADMIN PANEL */
+.admin-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px}
+.admin-modal{background:var(--white);border-radius:12px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.admin-hdr{background:var(--g1);color:#fff;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;border-radius:12px 12px 0 0}
+.admin-hdr h2{font-size:1rem;font-weight:700}
+.admin-body{padding:18px}
+.user-table{width:100%;border-collapse:collapse;font-size:.82rem;margin-top:10px}
+.user-table th{background:var(--g1);color:#fff;padding:8px 10px;text-align:left;font-size:.75rem}
+.user-table td{padding:8px 10px;border-bottom:1px solid var(--g4)}
+.user-table tr:hover td{background:var(--g4)}
+.btn-sm{padding:3px 10px;border-radius:4px;font-size:.75rem;font-weight:700;cursor:pointer;border:none}
+.btn-sm-del{background:#fee2e2;color:#991b1b}
+.btn-sm-del:hover{background:#fca5a5}
+.btn-sm-rst{background:#dbeafe;color:#1e40af}
+.btn-sm-rst:hover{background:#bfdbfe}
+.admin-form{display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;margin-top:14px}
+.admin-form input{padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.82rem}
+.btn-add-user{padding:7px 14px;background:var(--g1);color:#fff;border:none;border-radius:6px;font-size:.82rem;font-weight:700;cursor:pointer;white-space:nowrap}
+/* PW CHANGE */
+.pw-modal{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;display:flex;align-items:center;justify-content:center;padding:20px;display:none}
+.pw-modal.open{display:flex}
+.pw-card{background:var(--white);border-radius:12px;max-width:400px;width:100%;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,.3)}
+.pw-card h3{font-size:1rem;font-weight:700;color:var(--g1);margin-bottom:14px}
 /* TREND CHART */
 .trend-card{background:var(--white);border-radius:var(--r);box-shadow:var(--shadow);padding:14px 16px}
 .trend-card h3{font-size:.84rem;font-weight:700;margin-bottom:10px;color:var(--ink)}
@@ -210,6 +243,8 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
   <div><h1>Reparatur-Verwaltung</h1><p>Repair Café Wetzikon</p></div>
   <div class="hdr-right">
     <span id="userInfo"></span>
+    <button id="pwChangeBtn" onclick="openPwChange()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 11px;border-radius:var(--r);font-size:.78rem;cursor:pointer;display:none">🔑 Passwort</button>
+    <button id="adminBtn" onclick="openAdmin()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;padding:5px 11px;border-radius:var(--r);font-size:.78rem;cursor:pointer;display:none">👤 Admin</button>
     <button id="reloadBtn" onclick="loadExcelFromDrive()">↺ Neu laden</button>
     <button id="loginBtn" onclick="startLogin()">
       <svg width="15" height="15" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.2 33.6 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.9 0 20.4-7.9 20.4-21 0-1.4-.1-2.7-.4-4z"/></svg>
@@ -326,14 +361,28 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 <div class="tab-content active" id="tab-search">
 
     <!-- Login / Loading / Data -->
-  <div id="loginScreen" class="center-card">
+  <div id="loginScreen" class="center-card" style="max-width:420px">
     <div class="icon">🔐</div>
-    <h2>Anmelden erforderlich</h2>
-    <p>Melde dich mit dem Google-Konto an, das Zugriff auf die RCW-Tabelle hat.</p>
-    <button class="btn-google" onclick="startLogin()">
-      <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.2 33.6 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.9 0 20.4-7.9 20.4-21 0-1.4-.1-2.7-.4-4z"/></svg>
-      Mit Google anmelden
-    </button>
+    <h2>RCW Anmelden</h2>
+    <p style="margin-bottom:16px">Wähle deine Anmeldemethode:</p>
+    <div class="login-tabs">
+      <button class="login-tab active" onclick="switchLoginTab('google',this)">Google-Konto</button>
+      <button class="login-tab" onclick="switchLoginTab('pw',this)">Benutzername / Passwort</button>
+    </div>
+    <div id="loginPanelGoogle" class="login-panel active">
+      <p style="font-size:.85rem;color:var(--soft);margin-bottom:14px">Für Benutzer mit Gmail-Konto:</p>
+      <button class="btn-google" onclick="startLogin()" style="width:100%;justify-content:center">
+        <svg width="17" height="17" viewBox="0 0 48 48"><path fill="#4285F4" d="M44.5 20H24v8.5h11.7C34.2 33.6 29.6 37 24 37c-7.2 0-13-5.8-13-13s5.8-13 13-13c3.1 0 6 1.1 8.2 2.9l6-6C34.6 5.1 29.6 3 24 3 12.4 3 3 12.4 3 24s9.4 21 21 21c10.9 0 20.4-7.9 20.4-21 0-1.4-.1-2.7-.4-4z"/></svg>
+        Mit Google anmelden
+      </button>
+    </div>
+    <div id="loginPanelPw" class="login-panel">
+      <p style="font-size:.85rem;color:var(--soft);margin-bottom:10px">Für Benutzer ohne Google-Konto:</p>
+      <input class="login-input" type="text" id="pwUser" placeholder="Benutzername" autocomplete="username">
+      <input class="login-input" type="password" id="pwPass" placeholder="Passwort" autocomplete="current-password" onkeydown="if(event.key==='Enter')pwLogin()">
+      <button class="btn-login" onclick="pwLogin()">Anmelden</button>
+      <div class="login-error" id="pwError">Falscher Benutzername oder Passwort</div>
+    </div>
   </div>
 
   <div id="loadingScreen" class="center-card" style="display:none">
@@ -436,6 +485,276 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 </div>
 
 <div id="toast"></div>
+
+<!-- Admin Panel -->
+<div class="admin-overlay" id="adminOverlay" style="display:none" onclick="if(event.target===this)closeAdmin()">
+  <div class="admin-modal">
+    <div class="admin-hdr">
+      <h2>👤 Benutzerverwaltung</h2>
+      <button onclick="closeAdmin()" style="background:none;border:none;color:#fff;font-size:1.3rem;cursor:pointer">✕</button>
+    </div>
+    <div class="admin-body">
+      <p style="font-size:.82rem;color:var(--soft);margin-bottom:10px">Hier kannst du Benutzer für den Passwort-Login verwalten. Passwörter werden verschlüsselt gespeichert.</p>
+      <table class="user-table">
+        <thead><tr><th>Benutzername</th><th>Rolle</th><th>Erstellt</th><th>Aktionen</th></tr></thead>
+        <tbody id="userTableBody"></tbody>
+      </table>
+      <div class="admin-form">
+        <input type="text" id="newUsername" placeholder="Benutzername">
+        <input type="password" id="newPassword" placeholder="Passwort (min. 6 Zeichen)">
+        <button class="btn-add-user" onclick="addUser()">+ Benutzer</button>
+      </div>
+      <div id="adminMsg" style="font-size:.8rem;margin-top:8px;color:var(--g1);display:none"></div>
+      <div style="margin-top:18px;padding:10px 14px;background:var(--g4);border-radius:6px;font-size:.78rem;color:var(--soft)">
+        <strong>Admin-Passwort ändern:</strong>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <input type="password" id="newAdminPw" placeholder="Neues Admin-Passwort" style="flex:1;padding:6px 10px;border:1px solid var(--border);border-radius:6px;font-size:.82rem">
+          <button onclick="changeAdminPw()" style="padding:6px 12px;background:var(--g1);color:#fff;border:none;border-radius:6px;font-size:.8rem;font-weight:700;cursor:pointer">Ändern</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Passwort ändern Modal -->
+<div class="pw-modal" id="pwChangeModal">
+  <div class="pw-card">
+    <h3>🔑 Passwort ändern</h3>
+    <input class="login-input" type="password" id="pwOld" placeholder="Aktuelles Passwort">
+    <input class="login-input" type="password" id="pwNew1" placeholder="Neues Passwort (min. 6 Zeichen)">
+    <input class="login-input" type="password" id="pwNew2" placeholder="Neues Passwort bestätigen">
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button class="btn-login" onclick="submitPwChange()">Speichern</button>
+      <button onclick="closePwChange()" style="flex:1;padding:10px;background:var(--g4);color:var(--ink);border:1px solid var(--border);border-radius:6px;font-size:.9rem;font-weight:700;cursor:pointer">Abbrechen</button>
+    </div>
+    <div id="pwChangeMsg" style="font-size:.8rem;margin-top:8px;display:none"></div>
+  </div>
+</div>
+<script>
+// ── Passwort-Auth System ───────────────────────────────────────────────────
+// Nutzt window.storage (Artifact-Speicher) für persistente Benutzerdaten
+// Fallback: localStorage wenn storage nicht verfügbar
+
+const ADMIN_KEY   = 'rcw_admin_pw_hash';
+const USERS_KEY   = 'rcw_users';
+const DEFAULT_ADMIN_PW = 'rcw2024'; // Beim ersten Start
+let currentPwUser = null; // Eingeloggter Passwort-User
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// Storage helpers mit Fallback auf localStorage
+async function storeGet(key) {
+  try {
+    if(window.storage) {
+      const r = await window.storage.get(key);
+      return r ? JSON.parse(r.value) : null;
+    }
+  } catch(e) {}
+  try { const v=localStorage.getItem(key); return v?JSON.parse(v):null; } catch(e){return null;}
+}
+async function storeSet(key, value) {
+  try {
+    if(window.storage) {
+      await window.storage.set(key, JSON.stringify(value));
+      return;
+    }
+  } catch(e) {}
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e){}
+}
+
+// Benutzer laden
+async function loadUsers() {
+  return await storeGet(USERS_KEY) || [];
+}
+async function saveUsers(users) {
+  await storeSet(USERS_KEY, users);
+}
+
+// Admin-Passwort Hash laden (Default beim ersten Start)
+async function getAdminHash() {
+  const stored = await storeGet(ADMIN_KEY);
+  if(stored) return stored;
+  const def = await sha256(DEFAULT_ADMIN_PW);
+  return def;
+}
+
+// Login mit Passwort
+async function pwLogin() {
+  const username = document.getElementById('pwUser').value.trim();
+  const password = document.getElementById('pwPass').value;
+  const errEl = document.getElementById('pwError');
+  errEl.style.display = 'none';
+
+  if(!username || !password) { errEl.textContent='Bitte alle Felder ausfüllen.'; errEl.style.display='block'; return; }
+
+  const hash = await sha256(password);
+
+  // Admin prüfen
+  const adminHash = await getAdminHash();
+  if(username.toLowerCase() === 'admin' && hash === adminHash) {
+    currentPwUser = { username: 'admin', role: 'admin' };
+    onPwLoginSuccess();
+    return;
+  }
+
+  // Normale Benutzer prüfen
+  const users = await loadUsers();
+  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.hash === hash);
+  if(user) {
+    currentPwUser = { username: user.username, role: 'user' };
+    onPwLoginSuccess();
+    return;
+  }
+
+  errEl.textContent = 'Falscher Benutzername oder Passwort.';
+  errEl.style.display = 'block';
+}
+
+function onPwLoginSuccess() {
+  sessionStorage.setItem('rcw_pw_user', JSON.stringify(currentPwUser));
+  const name = currentPwUser.username + (currentPwUser.role==='admin'?' (Admin)':'');
+  setLoggedIn(name);
+  // PW-Change Button immer zeigen, Admin-Button nur für Admin
+  document.getElementById('pwChangeBtn').style.display = 'inline-block';
+  if(currentPwUser.role === 'admin') document.getElementById('adminBtn').style.display = 'inline-block';
+  loadExcelFromDrive();
+}
+
+// Tab wechseln
+function switchLoginTab(tab, el) {
+  document.querySelectorAll('.login-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.login-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('loginPanel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+}
+
+// ── Admin Panel ────────────────────────────────────────────────────────────
+async function openAdmin() {
+  await renderUserTable();
+  document.getElementById('adminOverlay').style.display = 'flex';
+}
+function closeAdmin() {
+  document.getElementById('adminOverlay').style.display = 'none';
+}
+
+async function renderUserTable() {
+  const users = await loadUsers();
+  const tb = document.getElementById('userTableBody');
+  if(!users.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--soft);padding:16px">Noch keine Benutzer</td></tr>';
+    return;
+  }
+  tb.innerHTML = users.map((u,i) => `
+    <tr>
+      <td><strong>${esc(u.username)}</strong></td>
+      <td>${u.role==='admin'?'Admin':'Benutzer'}</td>
+      <td style="font-size:.75rem;color:var(--soft)">${u.created||'—'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn-sm btn-sm-rst" onclick="resetUserPw(${i})">PW reset</button>
+        <button class="btn-sm btn-sm-del" onclick="deleteUser(${i})">Löschen</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function addUser() {
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const msg = document.getElementById('adminMsg');
+
+  if(!username || !password) { showAdminMsg('Bitte Benutzername und Passwort eingeben.','#dc2626'); return; }
+  if(password.length < 6) { showAdminMsg('Passwort muss mindestens 6 Zeichen haben.','#dc2626'); return; }
+  if(username.toLowerCase() === 'admin') { showAdminMsg('„admin" ist reserviert.','#dc2626'); return; }
+
+  const users = await loadUsers();
+  if(users.find(u=>u.username.toLowerCase()===username.toLowerCase())) {
+    showAdminMsg('Benutzername bereits vorhanden.','#dc2626'); return;
+  }
+
+  const hash = await sha256(password);
+  users.push({ username, hash, role:'user', created: new Date().toLocaleDateString('de-CH') });
+  await saveUsers(users);
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  await renderUserTable();
+  showAdminMsg('✓ Benutzer „'+username+'" erstellt.','#2d6a4f');
+}
+
+async function deleteUser(idx) {
+  if(!confirm('Benutzer wirklich löschen?')) return;
+  const users = await loadUsers();
+  users.splice(idx, 1);
+  await saveUsers(users);
+  await renderUserTable();
+  showAdminMsg('Benutzer gelöscht.','#2d6a4f');
+}
+
+async function resetUserPw(idx) {
+  const newPw = prompt('Neues Passwort für diesen Benutzer (min. 6 Zeichen):');
+  if(!newPw || newPw.length < 6) { showAdminMsg('Passwort zu kurz.','#dc2626'); return; }
+  const users = await loadUsers();
+  users[idx].hash = await sha256(newPw);
+  await saveUsers(users);
+  showAdminMsg('✓ Passwort zurückgesetzt.','#2d6a4f');
+}
+
+async function changeAdminPw() {
+  const newPw = document.getElementById('newAdminPw').value;
+  if(!newPw || newPw.length < 6) { showAdminMsg('Passwort muss mindestens 6 Zeichen haben.','#dc2626'); return; }
+  await storeSet(ADMIN_KEY, await sha256(newPw));
+  document.getElementById('newAdminPw').value = '';
+  showAdminMsg('✓ Admin-Passwort geändert.','#2d6a4f');
+}
+
+function showAdminMsg(text, color) {
+  const el = document.getElementById('adminMsg');
+  el.textContent = text; el.style.color = color; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+
+// ── Passwort ändern ────────────────────────────────────────────────────────
+function openPwChange() {
+  document.getElementById('pwChangeModal').classList.add('open');
+  document.getElementById('pwOld').value='';
+  document.getElementById('pwNew1').value='';
+  document.getElementById('pwNew2').value='';
+  document.getElementById('pwChangeMsg').style.display='none';
+}
+function closePwChange() {
+  document.getElementById('pwChangeModal').classList.remove('open');
+}
+
+async function submitPwChange() {
+  const old = document.getElementById('pwOld').value;
+  const n1  = document.getElementById('pwNew1').value;
+  const n2  = document.getElementById('pwNew2').value;
+  const msg = document.getElementById('pwChangeMsg');
+  const showMsg = (t,c)=>{ msg.textContent=t; msg.style.color=c; msg.style.display='block'; };
+
+  if(!old||!n1||!n2){ showMsg('Bitte alle Felder ausfüllen.','#dc2626'); return; }
+  if(n1.length < 6){ showMsg('Neues Passwort min. 6 Zeichen.','#dc2626'); return; }
+  if(n1 !== n2){ showMsg('Neue Passwörter stimmen nicht überein.','#dc2626'); return; }
+
+  const oldHash = await sha256(old);
+  const u = currentPwUser;
+
+  if(u.role === 'admin') {
+    const adminHash = await getAdminHash();
+    if(oldHash !== adminHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
+    await storeSet(ADMIN_KEY, await sha256(n1));
+  } else {
+    const users = await loadUsers();
+    const idx = users.findIndex(x=>x.username===u.username);
+    if(idx===-1||users[idx].hash!==oldHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
+    users[idx].hash = await sha256(n1);
+    await saveUsers(users);
+  }
+  showMsg('✓ Passwort erfolgreich geändert!','#2d6a4f');
+  setTimeout(closePwChange, 2000);
+}
+</script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
@@ -448,6 +767,15 @@ window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('fileIdInput').value=localStorage.getItem('rcw_fid')||'';
   const tok=sessionStorage.getItem('rcw_tok');
   if(tok){accessToken=tok;setLoggedIn(sessionStorage.getItem('rcw_user')||'');loadExcelFromDrive();}
+  const pwSess=sessionStorage.getItem('rcw_pw_user');
+  if(pwSess){
+    currentPwUser=JSON.parse(pwSess);
+    const name=currentPwUser.username+(currentPwUser.role==='admin'?' (Admin)':'');
+    setLoggedIn(name);
+    document.getElementById('pwChangeBtn').style.display='inline-block';
+    if(currentPwUser.role==='admin')document.getElementById('adminBtn').style.display='inline-block';
+    loadExcelFromDrive();
+  }
 });
 function saveConfig(){
   const c=document.getElementById('clientIdInput').value.trim();
@@ -489,11 +817,13 @@ function setLoggedIn(name){
   document.getElementById('loginScreen').style.display='none';
 }
 function logout(){
-  accessToken='';sessionStorage.removeItem('rcw_tok');sessionStorage.removeItem('rcw_user');
+  accessToken='';currentPwUser=null;sessionStorage.removeItem('rcw_tok');sessionStorage.removeItem('rcw_user');sessionStorage.removeItem('rcw_pw_user');
   document.getElementById('loginBtn').style.display='inline-flex';
   document.getElementById('logoutBtn').style.display='none';
   document.getElementById('reloadBtn').style.display='none';
   document.getElementById('userInfo').style.display='none';
+  document.getElementById('adminBtn').style.display='none';
+  document.getElementById('pwChangeBtn').style.display='none';
   document.getElementById('loginScreen').style.display='block';
   document.getElementById('loadingScreen').style.display='none';
   document.getElementById('dataView').style.display='none';
