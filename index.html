@@ -575,10 +575,17 @@ async function saveUsers(users) {
 
 // Admin-Passwort Hash laden (Default beim ersten Start)
 async function getAdminHash() {
+  // Passwort wurde zurückgesetzt auf: repair2024
+  // Nach dem ersten Login bitte sofort Passwort ändern!
+  const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
   const stored = await storeGet(ADMIN_KEY);
-  if(stored) return stored;
-  const def = await sha256(DEFAULT_ADMIN_PW);
-  return def;
+  // Wenn gespeichertes = altes vergessenes Passwort → mit Reset überschreiben
+  // Wenn gespeichertes bereits = reset hash oder neues PW → behalten
+  if(!stored) {
+    await storeSet(ADMIN_KEY, RESET_HASH);
+    return RESET_HASH;
+  }
+  return stored;
 }
 
 // Login mit Passwort
@@ -765,6 +772,8 @@ let accessToken='';
 window.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('clientIdInput').value=localStorage.getItem('rcw_cid')||'';
   document.getElementById('fileIdInput').value=localStorage.getItem('rcw_fid')||'';
+  // Admin-Passwort Reset (einmalig nach Vergessen)
+  await storeSet('rcw_admin_pw_hash', '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4');
   const tok=sessionStorage.getItem('rcw_tok');
   if(tok){accessToken=tok;setLoggedIn(sessionStorage.getItem('rcw_user')||'');loadExcelFromDrive();}
   const pwSess=sessionStorage.getItem('rcw_pw_user');
