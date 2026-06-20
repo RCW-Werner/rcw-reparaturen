@@ -512,10 +512,27 @@ function parseRow(r,i,lastDatum=''){
   };
   const rd=get('Datum','Date');
   let datum='';
-  if(rd instanceof Date)datum=rd.toISOString().split('T')[0];
-  else if(typeof rd==='string'&&rd)datum=rd.trim();
-  else if(typeof rd==='number'){const d=new Date(Math.round((rd-25569)*86400*1000));datum=d.toISOString().split('T')[0];}
-  if(!datum&&lastDatum)datum=lastDatum; // Datum von Vorgängerzeile übernehmen
+  if(rd instanceof Date){
+    datum=rd.toISOString().split('T')[0];
+  } else if(typeof rd==='string'&&rd.trim()){
+    const s=rd.trim();
+    // Nur eine Zahl? → kein gültiges Datum → Vorgänger übernehmen
+    if(/^\d+$/.test(s)){
+      datum=''; // wird unten durch lastDatum ersetzt
+    } else {
+      datum=s;
+    }
+  } else if(typeof rd==='number'){
+    // Excel-Seriennummer: nur gültig wenn im plausiblen Bereich (1900–2100)
+    if(rd>1&&rd<80000){
+      const d=new Date(Math.round((rd-25569)*86400*1000));
+      datum=d.toISOString().split('T')[0];
+    } else {
+      datum=''; // ungültige Zahl → Vorgänger übernehmen
+    }
+  }
+  // Datum leer oder ungültig → von Vorgängerzeile übernehmen
+  if(!datum&&lastDatum)datum=lastDatum;
   const kr=get('Kosten [CHF]','Kosten CHF','Kosten');
   const sr=get('Spenden [CHF]','Spenden CHF','Spenden');
   const kosten=parseFloat(String(kr).replace(/[^0-9.,]/g,'').replace(',','.'))||0;
