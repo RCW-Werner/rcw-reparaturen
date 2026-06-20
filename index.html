@@ -530,234 +530,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <div id="pwChangeMsg" style="font-size:.8rem;margin-top:8px;display:none"></div>
   </div>
 </div>
-<script>
-// ── Passwort-Auth System ───────────────────────────────────────────────────
-// Nutzt window.storage (Artifact-Speicher) für persistente Benutzerdaten
-// Fallback: localStorage wenn storage nicht verfügbar
 
-const ADMIN_KEY   = 'rcw_admin_pw_hash';
-const USERS_KEY   = 'rcw_users';
-const DEFAULT_ADMIN_PW = 'rcw2024'; // Beim ersten Start
-let currentPwUser = null; // Eingeloggter Passwort-User
-
-async function sha256(text) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-
-// Storage helpers mit Fallback auf localStorage
-async function storeGet(key) {
-  try {
-    if(window.storage) {
-      const r = await window.storage.get(key);
-      return r ? JSON.parse(r.value) : null;
-    }
-  } catch(e) {}
-  try { const v=localStorage.getItem(key); return v?JSON.parse(v):null; } catch(e){return null;}
-}
-async function storeSet(key, value) {
-  try {
-    if(window.storage) {
-      await window.storage.set(key, JSON.stringify(value));
-      return;
-    }
-  } catch(e) {}
-  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e){}
-}
-
-// Benutzer laden
-async function loadUsers() {
-  return await storeGet(USERS_KEY) || [];
-}
-async function saveUsers(users) {
-  await storeSet(USERS_KEY, users);
-}
-
-// Admin-Passwort Hash laden (Default beim ersten Start)
-async function getAdminHash() {
-  const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
-  try {
-    const stored = await storeGet(ADMIN_KEY);
-    if(stored) return stored;
-  } catch(e) {}
-  return RESET_HASH;
-}
-
-// Login mit Passwort
-async function pwLogin() {
-  const username = document.getElementById('pwUser').value.trim();
-  const password = document.getElementById('pwPass').value;
-  const errEl = document.getElementById('pwError');
-  errEl.style.display = 'none';
-
-  if(!username || !password) { errEl.textContent='Bitte alle Felder ausfüllen.'; errEl.style.display='block'; return; }
-
-  const hash = await sha256(password);
-
-  // Admin prüfen - Reset-Passwort direkt hardcoded prüfen
-  const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
-  const adminHash = await getAdminHash();
-  if(username.toLowerCase() === 'admin' && (hash === adminHash || hash === RESET_HASH)) {
-    currentPwUser = { username: 'admin', role: 'admin' };
-    onPwLoginSuccess();
-    return;
-  }
-
-  // Normale Benutzer prüfen
-  const users = await loadUsers();
-  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.hash === hash);
-  if(user) {
-    currentPwUser = { username: user.username, role: 'user' };
-    onPwLoginSuccess();
-    return;
-  }
-
-  errEl.textContent = 'Falscher Benutzername oder Passwort.';
-  errEl.style.display = 'block';
-}
-
-function onPwLoginSuccess() {
-  sessionStorage.setItem('rcw_pw_user', JSON.stringify(currentPwUser));
-  const name = currentPwUser.username + (currentPwUser.role==='admin'?' (Admin)':'');
-  setLoggedIn(name);
-  // PW-Change Button immer zeigen, Admin-Button nur für Admin
-  document.getElementById('pwChangeBtn').style.display = 'inline-block';
-  if(currentPwUser.role === 'admin') document.getElementById('adminBtn').style.display = 'inline-block';
-  loadExcelFromDrive();
-}
-
-// Tab wechseln
-function switchLoginTab(tab, el) {
-  document.querySelectorAll('.login-tab').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.login-panel').forEach(p=>p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('loginPanel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
-}
-
-// ── Admin Panel ────────────────────────────────────────────────────────────
-async function openAdmin() {
-  await renderUserTable();
-  document.getElementById('adminOverlay').style.display = 'flex';
-}
-function closeAdmin() {
-  document.getElementById('adminOverlay').style.display = 'none';
-}
-
-async function renderUserTable() {
-  const users = await loadUsers();
-  const tb = document.getElementById('userTableBody');
-  if(!users.length) {
-    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--soft);padding:16px">Noch keine Benutzer</td></tr>';
-    return;
-  }
-  tb.innerHTML = users.map((u,i) => `
-    <tr>
-      <td><strong>${esc(u.username)}</strong></td>
-      <td>${u.role==='admin'?'Admin':'Benutzer'}</td>
-      <td style="font-size:.75rem;color:var(--soft)">${u.created||'—'}</td>
-      <td style="display:flex;gap:4px">
-        <button class="btn-sm btn-sm-rst" onclick="resetUserPw(${i})">PW reset</button>
-        <button class="btn-sm btn-sm-del" onclick="deleteUser(${i})">Löschen</button>
-      </td>
-    </tr>`).join('');
-}
-
-async function addUser() {
-  const username = document.getElementById('newUsername').value.trim();
-  const password = document.getElementById('newPassword').value;
-  const msg = document.getElementById('adminMsg');
-
-  if(!username || !password) { showAdminMsg('Bitte Benutzername und Passwort eingeben.','#dc2626'); return; }
-  if(password.length < 6) { showAdminMsg('Passwort muss mindestens 6 Zeichen haben.','#dc2626'); return; }
-  if(username.toLowerCase() === 'admin') { showAdminMsg('„admin" ist reserviert.','#dc2626'); return; }
-
-  const users = await loadUsers();
-  if(users.find(u=>u.username.toLowerCase()===username.toLowerCase())) {
-    showAdminMsg('Benutzername bereits vorhanden.','#dc2626'); return;
-  }
-
-  const hash = await sha256(password);
-  users.push({ username, hash, role:'user', created: new Date().toLocaleDateString('de-CH') });
-  await saveUsers(users);
-  document.getElementById('newUsername').value = '';
-  document.getElementById('newPassword').value = '';
-  await renderUserTable();
-  showAdminMsg('✓ Benutzer „'+username+'" erstellt.','#2d6a4f');
-}
-
-async function deleteUser(idx) {
-  if(!confirm('Benutzer wirklich löschen?')) return;
-  const users = await loadUsers();
-  users.splice(idx, 1);
-  await saveUsers(users);
-  await renderUserTable();
-  showAdminMsg('Benutzer gelöscht.','#2d6a4f');
-}
-
-async function resetUserPw(idx) {
-  const newPw = prompt('Neues Passwort für diesen Benutzer (min. 6 Zeichen):');
-  if(!newPw || newPw.length < 6) { showAdminMsg('Passwort zu kurz.','#dc2626'); return; }
-  const users = await loadUsers();
-  users[idx].hash = await sha256(newPw);
-  await saveUsers(users);
-  showAdminMsg('✓ Passwort zurückgesetzt.','#2d6a4f');
-}
-
-async function changeAdminPw() {
-  const newPw = document.getElementById('newAdminPw').value;
-  if(!newPw || newPw.length < 6) { showAdminMsg('Passwort muss mindestens 6 Zeichen haben.','#dc2626'); return; }
-  await storeSet(ADMIN_KEY, await sha256(newPw));
-  document.getElementById('newAdminPw').value = '';
-  showAdminMsg('✓ Admin-Passwort geändert.','#2d6a4f');
-}
-
-function showAdminMsg(text, color) {
-  const el = document.getElementById('adminMsg');
-  el.textContent = text; el.style.color = color; el.style.display = 'block';
-  setTimeout(()=>el.style.display='none', 4000);
-}
-
-// ── Passwort ändern ────────────────────────────────────────────────────────
-function openPwChange() {
-  document.getElementById('pwChangeModal').classList.add('open');
-  document.getElementById('pwOld').value='';
-  document.getElementById('pwNew1').value='';
-  document.getElementById('pwNew2').value='';
-  document.getElementById('pwChangeMsg').style.display='none';
-}
-function closePwChange() {
-  document.getElementById('pwChangeModal').classList.remove('open');
-}
-
-async function submitPwChange() {
-  const old = document.getElementById('pwOld').value;
-  const n1  = document.getElementById('pwNew1').value;
-  const n2  = document.getElementById('pwNew2').value;
-  const msg = document.getElementById('pwChangeMsg');
-  const showMsg = (t,c)=>{ msg.textContent=t; msg.style.color=c; msg.style.display='block'; };
-
-  if(!old||!n1||!n2){ showMsg('Bitte alle Felder ausfüllen.','#dc2626'); return; }
-  if(n1.length < 6){ showMsg('Neues Passwort min. 6 Zeichen.','#dc2626'); return; }
-  if(n1 !== n2){ showMsg('Neue Passwörter stimmen nicht überein.','#dc2626'); return; }
-
-  const oldHash = await sha256(old);
-  const u = currentPwUser;
-
-  if(u.role === 'admin') {
-    const adminHash = await getAdminHash();
-    if(oldHash !== adminHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
-    await storeSet(ADMIN_KEY, await sha256(n1));
-  } else {
-    const users = await loadUsers();
-    const idx = users.findIndex(x=>x.username===u.username);
-    if(idx===-1||users[idx].hash!==oldHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
-    users[idx].hash = await sha256(n1);
-    await saveUsers(users);
-  }
-  showMsg('✓ Passwort erfolgreich geändert!','#2d6a4f');
-  setTimeout(closePwChange, 2000);
-}
-</script>
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
@@ -1977,6 +1750,235 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
 });
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModalDirect();});
+
+// ── Passwort-Auth System ──────────────────────────────────────────────────
+// ── Passwort-Auth System ───────────────────────────────────────────────────
+// Nutzt window.storage (Artifact-Speicher) für persistente Benutzerdaten
+// Fallback: localStorage wenn storage nicht verfügbar
+
+const ADMIN_KEY   = 'rcw_admin_pw_hash';
+const USERS_KEY   = 'rcw_users';
+const DEFAULT_ADMIN_PW = 'rcw2024'; // Beim ersten Start
+let currentPwUser = null; // Eingeloggter Passwort-User
+
+async function sha256(text) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+// Storage helpers mit Fallback auf localStorage
+async function storeGet(key) {
+  try {
+    if(window.storage) {
+      const r = await window.storage.get(key);
+      return r ? JSON.parse(r.value) : null;
+    }
+  } catch(e) {}
+  try { const v=localStorage.getItem(key); return v?JSON.parse(v):null; } catch(e){return null;}
+}
+async function storeSet(key, value) {
+  try {
+    if(window.storage) {
+      await window.storage.set(key, JSON.stringify(value));
+      return;
+    }
+  } catch(e) {}
+  try { localStorage.setItem(key, JSON.stringify(value)); } catch(e){}
+}
+
+// Benutzer laden
+async function loadUsers() {
+  return await storeGet(USERS_KEY) || [];
+}
+async function saveUsers(users) {
+  await storeSet(USERS_KEY, users);
+}
+
+// Admin-Passwort Hash laden (Default beim ersten Start)
+async function getAdminHash() {
+  const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
+  try {
+    const stored = await storeGet(ADMIN_KEY);
+    if(stored) return stored;
+  } catch(e) {}
+  return RESET_HASH;
+}
+
+// Login mit Passwort
+async function pwLogin() {
+  const username = document.getElementById('pwUser').value.trim();
+  const password = document.getElementById('pwPass').value;
+  const errEl = document.getElementById('pwError');
+  errEl.style.display = 'none';
+
+  if(!username || !password) { errEl.textContent='Bitte alle Felder ausfüllen.'; errEl.style.display='block'; return; }
+
+  const hash = await sha256(password);
+
+  // Admin prüfen - Reset-Passwort direkt hardcoded prüfen
+  const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
+  const adminHash = await getAdminHash();
+  if(username.toLowerCase() === 'admin' && (hash === adminHash || hash === RESET_HASH)) {
+    currentPwUser = { username: 'admin', role: 'admin' };
+    onPwLoginSuccess();
+    return;
+  }
+
+  // Normale Benutzer prüfen
+  const users = await loadUsers();
+  const user = users.find(u => u.username.toLowerCase() === username.toLowerCase() && u.hash === hash);
+  if(user) {
+    currentPwUser = { username: user.username, role: 'user' };
+    onPwLoginSuccess();
+    return;
+  }
+
+  errEl.textContent = 'Falscher Benutzername oder Passwort.';
+  errEl.style.display = 'block';
+}
+
+function onPwLoginSuccess() {
+  sessionStorage.setItem('rcw_pw_user', JSON.stringify(currentPwUser));
+  const name = currentPwUser.username + (currentPwUser.role==='admin'?' (Admin)':'');
+  setLoggedIn(name);
+  // PW-Change Button immer zeigen, Admin-Button nur für Admin
+  document.getElementById('pwChangeBtn').style.display = 'inline-block';
+  if(currentPwUser.role === 'admin') document.getElementById('adminBtn').style.display = 'inline-block';
+  loadExcelFromDrive();
+}
+
+// Tab wechseln
+function switchLoginTab(tab, el) {
+  document.querySelectorAll('.login-tab').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.login-panel').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('loginPanel'+tab.charAt(0).toUpperCase()+tab.slice(1)).classList.add('active');
+}
+
+// ── Admin Panel ────────────────────────────────────────────────────────────
+async function openAdmin() {
+  await renderUserTable();
+  document.getElementById('adminOverlay').style.display = 'flex';
+}
+function closeAdmin() {
+  document.getElementById('adminOverlay').style.display = 'none';
+}
+
+async function renderUserTable() {
+  const users = await loadUsers();
+  const tb = document.getElementById('userTableBody');
+  if(!users.length) {
+    tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--soft);padding:16px">Noch keine Benutzer</td></tr>';
+    return;
+  }
+  tb.innerHTML = users.map((u,i) => `
+    <tr>
+      <td><strong>${esc(u.username)}</strong></td>
+      <td>${u.role==='admin'?'Admin':'Benutzer'}</td>
+      <td style="font-size:.75rem;color:var(--soft)">${u.created||'—'}</td>
+      <td style="display:flex;gap:4px">
+        <button class="btn-sm btn-sm-rst" onclick="resetUserPw(${i})">PW reset</button>
+        <button class="btn-sm btn-sm-del" onclick="deleteUser(${i})">Löschen</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function addUser() {
+  const username = document.getElementById('newUsername').value.trim();
+  const password = document.getElementById('newPassword').value;
+  const msg = document.getElementById('adminMsg');
+
+  if(!username || !password) { showAdminMsg('Bitte Benutzername und Passwort eingeben.','#dc2626'); return; }
+  if(password.length < 6) { showAdminMsg('Passwort muss mindestens 6 Zeichen haben.','#dc2626'); return; }
+  if(username.toLowerCase() === 'admin') { showAdminMsg('„admin" ist reserviert.','#dc2626'); return; }
+
+  const users = await loadUsers();
+  if(users.find(u=>u.username.toLowerCase()===username.toLowerCase())) {
+    showAdminMsg('Benutzername bereits vorhanden.','#dc2626'); return;
+  }
+
+  const hash = await sha256(password);
+  users.push({ username, hash, role:'user', created: new Date().toLocaleDateString('de-CH') });
+  await saveUsers(users);
+  document.getElementById('newUsername').value = '';
+  document.getElementById('newPassword').value = '';
+  await renderUserTable();
+  showAdminMsg('✓ Benutzer „'+username+'" erstellt.','#2d6a4f');
+}
+
+async function deleteUser(idx) {
+  if(!confirm('Benutzer wirklich löschen?')) return;
+  const users = await loadUsers();
+  users.splice(idx, 1);
+  await saveUsers(users);
+  await renderUserTable();
+  showAdminMsg('Benutzer gelöscht.','#2d6a4f');
+}
+
+async function resetUserPw(idx) {
+  const newPw = prompt('Neues Passwort für diesen Benutzer (min. 6 Zeichen):');
+  if(!newPw || newPw.length < 6) { showAdminMsg('Passwort zu kurz.','#dc2626'); return; }
+  const users = await loadUsers();
+  users[idx].hash = await sha256(newPw);
+  await saveUsers(users);
+  showAdminMsg('✓ Passwort zurückgesetzt.','#2d6a4f');
+}
+
+async function changeAdminPw() {
+  const newPw = document.getElementById('newAdminPw').value;
+  if(!newPw || newPw.length < 6) { showAdminMsg('Passwort muss mindestens 6 Zeichen haben.','#dc2626'); return; }
+  await storeSet(ADMIN_KEY, await sha256(newPw));
+  document.getElementById('newAdminPw').value = '';
+  showAdminMsg('✓ Admin-Passwort geändert.','#2d6a4f');
+}
+
+function showAdminMsg(text, color) {
+  const el = document.getElementById('adminMsg');
+  el.textContent = text; el.style.color = color; el.style.display = 'block';
+  setTimeout(()=>el.style.display='none', 4000);
+}
+
+// ── Passwort ändern ────────────────────────────────────────────────────────
+function openPwChange() {
+  document.getElementById('pwChangeModal').classList.add('open');
+  document.getElementById('pwOld').value='';
+  document.getElementById('pwNew1').value='';
+  document.getElementById('pwNew2').value='';
+  document.getElementById('pwChangeMsg').style.display='none';
+}
+function closePwChange() {
+  document.getElementById('pwChangeModal').classList.remove('open');
+}
+
+async function submitPwChange() {
+  const old = document.getElementById('pwOld').value;
+  const n1  = document.getElementById('pwNew1').value;
+  const n2  = document.getElementById('pwNew2').value;
+  const msg = document.getElementById('pwChangeMsg');
+  const showMsg = (t,c)=>{ msg.textContent=t; msg.style.color=c; msg.style.display='block'; };
+
+  if(!old||!n1||!n2){ showMsg('Bitte alle Felder ausfüllen.','#dc2626'); return; }
+  if(n1.length < 6){ showMsg('Neues Passwort min. 6 Zeichen.','#dc2626'); return; }
+  if(n1 !== n2){ showMsg('Neue Passwörter stimmen nicht überein.','#dc2626'); return; }
+
+  const oldHash = await sha256(old);
+  const u = currentPwUser;
+
+  if(u.role === 'admin') {
+    const adminHash = await getAdminHash();
+    if(oldHash !== adminHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
+    await storeSet(ADMIN_KEY, await sha256(n1));
+  } else {
+    const users = await loadUsers();
+    const idx = users.findIndex(x=>x.username===u.username);
+    if(idx===-1||users[idx].hash!==oldHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
+    users[idx].hash = await sha256(n1);
+    await saveUsers(users);
+  }
+  showMsg('✓ Passwort erfolgreich geändert!','#2d6a4f');
+  setTimeout(closePwChange, 2000);
+}
+
 </script>
 </body>
 </html>
