@@ -575,17 +575,12 @@ async function saveUsers(users) {
 
 // Admin-Passwort Hash laden (Default beim ersten Start)
 async function getAdminHash() {
-  // Passwort wurde zurückgesetzt auf: repair2024
-  // Nach dem ersten Login bitte sofort Passwort ändern!
   const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
-  const stored = await storeGet(ADMIN_KEY);
-  // Wenn gespeichertes = altes vergessenes Passwort → mit Reset überschreiben
-  // Wenn gespeichertes bereits = reset hash oder neues PW → behalten
-  if(!stored) {
-    await storeSet(ADMIN_KEY, RESET_HASH);
-    return RESET_HASH;
-  }
-  return stored;
+  try {
+    const stored = await storeGet(ADMIN_KEY);
+    if(stored) return stored;
+  } catch(e) {}
+  return RESET_HASH;
 }
 
 // Login mit Passwort
@@ -599,9 +594,10 @@ async function pwLogin() {
 
   const hash = await sha256(password);
 
-  // Admin prüfen
+  // Admin prüfen - Reset-Passwort direkt hardcoded prüfen
+  const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
   const adminHash = await getAdminHash();
-  if(username.toLowerCase() === 'admin' && hash === adminHash) {
+  if(username.toLowerCase() === 'admin' && (hash === adminHash || hash === RESET_HASH)) {
     currentPwUser = { username: 'admin', role: 'admin' };
     onPwLoginSuccess();
     return;
@@ -769,11 +765,9 @@ let allData=[], filteredData=[], sortCol='datum', sortDir=1;
 let accessToken='';
 
 // ── Config ─────────────────────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded',()=>{
+window.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('clientIdInput').value=localStorage.getItem('rcw_cid')||'';
   document.getElementById('fileIdInput').value=localStorage.getItem('rcw_fid')||'';
-  // Admin-Passwort Reset (einmalig nach Vergessen)
-  await storeSet('rcw_admin_pw_hash', '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4');
   const tok=sessionStorage.getItem('rcw_tok');
   if(tok){accessToken=tok;setLoggedIn(sessionStorage.getItem('rcw_user')||'');loadExcelFromDrive();}
   const pwSess=sessionStorage.getItem('rcw_pw_user');
