@@ -1273,13 +1273,17 @@ function applyFilters(){
   document.getElementById('countBadge').textContent=filteredData.length;
   document.getElementById('countLabel').textContent=filteredData.length===1?'Eintrag gefunden':'Einträge gefunden';
   // Auswertung und Report mit aktuellen Daten aktualisieren wenn Tab aktiv
-  const activeTab=document.querySelector('.tab-btn.active');
-  if(activeTab){
-    if(activeTab.dataset.tab==='analytics'&&allData.length){
-      renderAnalytics(filteredData,'statsGrid','chartsGrid');
+  clearTimeout(window._refreshTimer);
+  window._refreshTimer=setTimeout(()=>{
+    const activeTab=document.querySelector('.tab-btn.active');
+    if(activeTab){
+      if(activeTab.dataset.tab==='analytics'&&allData.length){
+        renderAnalytics(filteredData,'statsGrid','chartsGrid');
+        renderTrend(filteredData,'trendSvg','trendCard');
+      }
+      if(activeTab.dataset.tab==='report'&&filteredData.length)renderReport();
     }
-    if(activeTab.dataset.tab==='report'&&filteredData.length)renderReport();
-  }
+  },150);
 }
 function resetFilters(){
   ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min','f_gegenstand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
@@ -1367,7 +1371,6 @@ function renderAnalytics(data,sgId,cgId){
     sc('Total Spenden','CHF '+tSp.toFixed(0),'Ø CHF '+(mSp>0?(tSp/mSp).toFixed(0):0))+
     sc('Total Kosten','CHF '+tKo.toFixed(0),'');
   renderTrend(data,'trendSvg','trendCard');
-  renderTrend(data,'rTrendSvg','rTrendCard');
   document.getElementById(cgId).innerHTML=
     bc('Status',countBy(data,'status'))+
     bc('Kategorie',countBy(data,'kategorie'))+
@@ -1447,6 +1450,7 @@ function renderReport(){
 
   // Stats & Charts
   renderAnalytics(filteredData,'rStatsGrid','rChartsGrid');
+  renderTrend(filteredData,'rTrendSvg','rTrendCard');
 
   // Detail table
   const tb=document.getElementById('reportTableBody');
@@ -1549,7 +1553,7 @@ function renderTrend(data,svgId,cardId){
   const cW=W-PAD.l-PAD.r;
   const cH=H-PAD.t-PAD.b;
   const vals=keys.map(k=>monate[k]);
-  const maxV=Math.max(...vals)||1;
+  const maxV=vals.reduce((a,b)=>a>b?a:b,0)||1;
 
   const x=i=>PAD.l+i*(cW/(keys.length-1||1));
   const y=v=>PAD.t+cH-(v/maxV*cH);
