@@ -146,6 +146,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 /* PRINT */
 @media print {
   #globalFilterBar{display:none!important}
+  #reportTitleInput{display:none!important}
   header,#configPanel,.tabs,.filter-bar,.info-bar,.table-panel,
   #loginScreen,#loadingScreen,.btn-print,.report-header-bar .btn-print,
   #toast,.modal-overlay{display:none!important}
@@ -357,6 +358,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <div class="report-header-bar">
       <div class="report-title-block">
         <h2 id="reportTitle">RCW Repair Café Wetzikon – Reparatur-Report</h2>
+      <div style="margin-top:4px"><input id="reportTitleInput" type="text" value="RCW Repair Café Wetzikon – Reparatur-Report" style="font-size:.85rem;border:1px dashed var(--border);border-radius:4px;padding:3px 8px;width:100%;max-width:480px;background:var(--bg);color:var(--ink)" oninput="document.getElementById('reportTitle').textContent=this.value" placeholder="Titel anpassen…"></div>
         <p id="reportSubtitle"></p>
       </div>
       <button class="btn-print" onclick="window.print()">🖨 Als PDF drucken</button>
@@ -1314,6 +1316,8 @@ function renderReport(){
   document.getElementById('reportView').style.display='flex';
 
   // Title & subtitle
+  const titleInput=document.getElementById('reportTitleInput');
+  document.getElementById('reportTitle').textContent=titleInput?titleInput.value:'RCW Repair Café Wetzikon – Reparatur-Report';
   const von=document.getElementById('f_von').value;
   const bis=document.getElementById('f_bis').value;
   let sub='Erstellt am '+new Date().toLocaleDateString('de-CH');
