@@ -367,7 +367,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <div class="report-section-title">Kennzahlen</div>
     <div class="stats-grid" id="rStatsGrid"></div>
     <!-- Charts -->
-    <div class="report-section-title" style="margin-top:8px">Auswertung nach Kategorien</div>
+    <div class="report-section-title" style="margin-top:8px">Auswertung nach Kategorien, Reparateur, Triage, PLZ/Ort</div>
     <div class="charts-grid" id="rChartsGrid"></div>
     <!-- Detail list -->
     <div class="report-section-title" style="margin-top:8px">Detailliste</div>
@@ -1266,6 +1266,7 @@ function closeModalDirect(){document.getElementById('modalOverlay').classList.re
 
 // ── Analytics ──────────────────────────────────────────────────────────────
 function renderAnalytics(data,sgId,cgId){
+  console.log('renderAnalytics: '+data.length+' Einträge, plz sample:', data.slice(0,3).map(r=>r.plz+'/'+r.ort));
   const total=data.length;
   const rep=data.filter(r=>r.status.toLowerCase().includes('repariert')&&!r.status.toLowerCase().includes('un')).length;
   const rate=total>0?Math.round(rep/total*100):0;
@@ -1282,20 +1283,40 @@ function renderAnalytics(data,sgId,cgId){
     bc('Kategorie',countBy(data,'kategorie'))+
     bc('Reparateur',countBy(data,'reparateur'))+
     bc('Triage',countBy(data,'triage'))+
-    bc('PLZ / Ort',countByPlzOrt(data));
+    bcWide('PLZ / Ort',countByPlzOrt(data));
 }
 function sc(l,v,s){return`<div class="stat-card"><div class="lbl">${l}</div><div class="val">${v}</div>${s?`<div class="sub">${s}</div>`:''}</div>`;}
 function countBy(data,f){const c={};data.forEach(r=>{const v=r[f]||'(leer)';c[v]=(c[v]||0)+1;});return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,12);}
 function countByPlzOrt(data){
   const c={};
   data.forEach(r=>{
-    const v=r.plz?(r.ort?r.plz+' '+r.ort:r.plz):'(leer)';
+    const plz=String(r.plz||'').trim();
+    const ort=String(r.ort||'').trim();
+    const v=plz?(ort?plz+' '+ort:plz):'(keine PLZ)';
     c[v]=(c[v]||0)+1;
   });
-  return Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  const result=Object.entries(c).sort((a,b)=>b[1]-a[1]).slice(0,20);
+  console.log('countByPlzOrt result:', result.slice(0,5));
+  return result;
+}
+function bcWide(title,entries){
+  if(!entries.length)return `<div class="chart-card" style="grid-column:1/-1"><h3>${title}</h3><p style="color:var(--soft);font-size:.8rem">Keine Daten</p></div>`;
+  const mx=entries[0][1];
+  // Split into 2 columns for wide display
+  const half=Math.ceil(entries.length/2);
+  const cols=[entries.slice(0,half),entries.slice(half)];
+  return`<div class="chart-card" style="grid-column:1/-1"><h3>${title}</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 20px">
+      ${cols.map(col=>`<div class="bar-chart">${col.map(([l,n])=>`
+        <div class="bar-row">
+          <div class="bar-lbl" title="${esc(l)}" style="width:150px">${esc(l)}</div>
+          <div class="bar-track"><div class="bar-fill" style="width:${Math.round(n/mx*100)}%"></div></div>
+          <div class="bar-cnt">${n}</div>
+        </div>`).join('')}</div>`).join('')}
+    </div></div>`;
 }
 function bc(title,entries){
-  if(!entries.length)return '';
+  if(!entries.length)return `<div class="chart-card"><h3>${title}</h3><p style="color:var(--soft);font-size:.8rem">Keine Daten</p></div>`;
   const mx=entries[0][1];
   return`<div class="chart-card"><h3>${title}</h3><div class="bar-chart">${entries.map(([l,n])=>`
     <div class="bar-row">
