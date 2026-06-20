@@ -265,7 +265,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
         <input type="text" id="fileIdInput" placeholder="1BxiMVs0XRA5nFMdK..."></div>
       <button class="btn-cfg" onclick="saveConfig()" style="margin-top:18px">Speichern</button>
     </div>
-    <div class="cfg-hint">💡 Einmalig eingeben und speichern.
+    <div class="cfg-hint">💡 Einmalig eingeben und speichern. Für Passwort-Benutzer: Excel-Datei auf Google Drive als <strong>„Jeder mit Link – Betrachter"</strong> freigeben.
       <span id="cfgToggle" onclick="toggleCfgHelp()">Wo finde ich die File-ID? ▼</span>
     </div>
     <div id="cfgHelp">
@@ -614,13 +614,27 @@ function logout(){
 async function loadExcelFromDrive(){
   const fid=localStorage.getItem('rcw_fid')||document.getElementById('fileIdInput').value.trim();
   if(!fid){showToast('⚠ Keine File-ID.');return;}
-  if(!accessToken){showToast('⚠ Bitte anmelden.');return;}
+  // Passwort-User haben keinen accessToken → Google Drive Export-URL verwenden
+  // (Datei muss auf Google Drive als "Jeder mit Link" freigegeben sein)
+  if(!accessToken && !currentPwUser){showToast('⚠ Bitte anmelden.');return;}
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('loadingScreen').style.display='block';
   document.getElementById('dataView').style.display='none';
   try{
-    const res=await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`,
-      {headers:{Authorization:'Bearer '+accessToken}});
+    let res;
+    if(accessToken){
+      // Google-Login: direkt mit OAuth Token
+      res=await fetch(`https://www.googleapis.com/drive/v3/files/${fid}?alt=media`,
+        {headers:{Authorization:'Bearer '+accessToken}});
+    } else {
+      // Passwort-Login: Google Drive Export-URL (benötigt "Jeder mit Link" Freigabe)
+      // Versuche zuerst direkte Export-URL
+      res=await fetch(`https://drive.google.com/uc?export=download&id=${fid}&confirm=t`);
+      if(!res.ok){
+        // Fallback: Docs-Export
+        res=await fetch(`https://docs.google.com/spreadsheets/d/${fid}/export?format=xlsx`);
+      }
+    }
     if(res.status===401){showToast('Sitzung abgelaufen.');logout();return;}
     if(res.status===403){showToast('Kein Zugriff auf diese Datei.');document.getElementById('loadingScreen').style.display='none';document.getElementById('loginScreen').style.display='block';return;}
     if(!res.ok)throw new Error('HTTP '+res.status);
