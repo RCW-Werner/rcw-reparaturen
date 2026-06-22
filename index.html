@@ -1887,10 +1887,9 @@ async function pwLogin() {
 
   const hash = sha256(password);
 
-  // Admin prüfen - Reset-Passwort direkt hardcoded prüfen
-  const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
+  // Admin prüfen
   const adminHash = await getAdminHash();
-  if(username.toLowerCase() === 'admin' && (hash === adminHash || hash === RESET_HASH)) {
+  if(username.toLowerCase() === 'admin' && hash === adminHash) {
     currentPwUser = { username: 'admin', role: 'admin' };
     onPwLoginSuccess();
     return;
