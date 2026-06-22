@@ -1783,9 +1783,59 @@ const USERS_KEY   = 'rcw_users';
 const DEFAULT_ADMIN_PW = 'rcw2024'; // Beim ersten Start
 let currentPwUser = null; // Eingeloggter Passwort-User
 
-async function sha256(text) {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+// Pure JS SHA-256 – browserkompatibel (nach FIPS 180-4)
+function sha256(str) {
+  function S(n,x){return (x>>>n)|(x<<(32-n));}
+  function R(n,x){return x>>>n;}
+  function Ch(x,y,z){return (x&y)^(~x&z);}
+  function Maj(x,y,z){return (x&y)^(x&z)^(y&z);}
+  function Sigma0(x){return S(2,x)^S(13,x)^S(22,x);}
+  function Sigma1(x){return S(6,x)^S(11,x)^S(25,x);}
+  function Gamma0(x){return S(7,x)^S(18,x)^R(3,x);}
+  function Gamma1(x){return S(17,x)^S(19,x)^R(10,x);}
+  function safe_add(x,y){return (x+y)|0;}
+
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+           0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+           0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+           0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+           0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+           0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+           0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+           0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+
+  // UTF-8 encode
+  let utf8=[];
+  for(let i=0;i<str.length;i++){
+    let c2=str.charCodeAt(i);
+    if(c2<128){utf8.push(c2);}
+    else if(c2<2048){utf8.push(192|(c2>>6),128|(c2&63));}
+    else if(c2<65536){utf8.push(224|(c2>>12),128|((c2>>6)&63),128|(c2&63));}
+    else{utf8.push(240|(c2>>18),128|((c2>>12)&63),128|((c2>>6)&63),128|(c2&63));}
+  }
+  const l=utf8.length;
+  // Pad
+  utf8.push(0x80);
+  while(utf8.length%64!==56) utf8.push(0);
+  const bitLen=l*8;
+  for(let i=7;i>=0;i--) utf8.push((bitLen/Math.pow(2,i*8))&255);
+
+  // Process
+  let H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  for(let o=0;o<utf8.length;o+=64){
+    const W=[];
+    for(let i=0;i<16;i++) W[i]=(utf8[o+i*4]<<24)|(utf8[o+i*4+1]<<16)|(utf8[o+i*4+2]<<8)|utf8[o+i*4+3];
+    for(let i=16;i<64;i++) W[i]=safe_add(safe_add(Gamma1(W[i-2]),W[i-7]),safe_add(Gamma0(W[i-15]),W[i-16]));
+    let [a,b,c2,d,e,f,g,h2]=[...H];
+    for(let i=0;i<64;i++){
+      const t1=safe_add(safe_add(safe_add(safe_add(h2,Sigma1(e)),Ch(e,f,g)),K[i]),W[i]);
+      const t2=safe_add(Sigma0(a),Maj(a,b,c2));
+      h2=g;g=f;f=e;e=safe_add(d,t1);d=c2;c2=b;b=a;a=safe_add(t1,t2);
+    }
+    H[0]=safe_add(H[0],a);H[1]=safe_add(H[1],b);H[2]=safe_add(H[2],c2);H[3]=safe_add(H[3],d);
+    H[4]=safe_add(H[4],e);H[5]=safe_add(H[5],f);H[6]=safe_add(H[6],g);H[7]=safe_add(H[7],h2);
+  }
+  return H.map(n=>('00000000'+(n>>>0).toString(16)).slice(-8)).join('');
 }
 
 // Storage helpers mit Fallback auf localStorage
@@ -1835,7 +1885,7 @@ async function pwLogin() {
 
   if(!username || !password) { errEl.textContent='Bitte alle Felder ausfüllen.'; errEl.style.display='block'; return; }
 
-  const hash = await sha256(password);
+  const hash = sha256(password);
 
   // Admin prüfen - Reset-Passwort direkt hardcoded prüfen
   const RESET_HASH = '69f4dbc1634cfc93022f89dd458ee38463e87d4d36c449c0602d09dbf6ea25f4';
@@ -1919,7 +1969,7 @@ async function addUser() {
     showAdminMsg('Benutzername bereits vorhanden.','#dc2626'); return;
   }
 
-  const hash = await sha256(password);
+  const hash = sha256(password);
   users.push({ username, hash, role:'user', created: new Date().toLocaleDateString('de-CH') });
   await saveUsers(users);
   document.getElementById('newUsername').value = '';
@@ -1941,7 +1991,7 @@ async function resetUserPw(idx) {
   const newPw = prompt('Neues Passwort für diesen Benutzer (min. 6 Zeichen):');
   if(!newPw || newPw.length < 6) { showAdminMsg('Passwort zu kurz.','#dc2626'); return; }
   const users = await loadUsers();
-  users[idx].hash = await sha256(newPw);
+  users[idx].hash = sha256(newPw);
   await saveUsers(users);
   showAdminMsg('✓ Passwort zurückgesetzt.','#2d6a4f');
 }
@@ -1949,7 +1999,7 @@ async function resetUserPw(idx) {
 async function changeAdminPw() {
   const newPw = document.getElementById('newAdminPw').value;
   if(!newPw || newPw.length < 6) { showAdminMsg('Passwort muss mindestens 6 Zeichen haben.','#dc2626'); return; }
-  await storeSet(ADMIN_KEY, await sha256(newPw));
+  await storeSet(ADMIN_KEY, sha256(newPw));
   document.getElementById('newAdminPw').value = '';
   showAdminMsg('✓ Admin-Passwort geändert.','#2d6a4f');
 }
@@ -1983,18 +2033,18 @@ async function submitPwChange() {
   if(n1.length < 6){ showMsg('Neues Passwort min. 6 Zeichen.','#dc2626'); return; }
   if(n1 !== n2){ showMsg('Neue Passwörter stimmen nicht überein.','#dc2626'); return; }
 
-  const oldHash = await sha256(old);
+  const oldHash = sha256(old);
   const u = currentPwUser;
 
   if(u.role === 'admin') {
     const adminHash = await getAdminHash();
     if(oldHash !== adminHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
-    await storeSet(ADMIN_KEY, await sha256(n1));
+    await storeSet(ADMIN_KEY, sha256(n1));
   } else {
     const users = await loadUsers();
     const idx = users.findIndex(x=>x.username===u.username);
     if(idx===-1||users[idx].hash!==oldHash){ showMsg('Aktuelles Passwort falsch.','#dc2626'); return; }
-    users[idx].hash = await sha256(n1);
+    users[idx].hash = sha256(n1);
     await saveUsers(users);
   }
   showMsg('✓ Passwort erfolgreich geändert!','#2d6a4f');
