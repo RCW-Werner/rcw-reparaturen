@@ -335,6 +335,10 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <label>Min. Kosten</label>
     <input type="number" id="f_kosten_min" placeholder="0" min="0" oninput="applyFilters()">
   </div>
+  <div class="fb-group">
+    <label>Rep.-Nr.</label>
+    <input type="text" id="f_nr" placeholder="z.B. 42…" oninput="applyFilters()">
+  </div>
   <div class="fb-group wide">
     <label>Gegenstand / Gerät</label>
     <div class="gegenstand-search-wrap">
@@ -1383,6 +1387,8 @@ function applyFilters(){
   const kMin=parseFloat(document.getElementById('f_kosten_min').value)||0;
   const geg=(document.getElementById('f_gegenstand')||{}).value||'';
   const gegL=geg.toLowerCase().trim();
+  const nr=(document.getElementById('f_nr')||{}).value||'';
+  const nrL=nr.trim();
   filteredData=allData.filter(r=>{
     if(von&&r.datum&&r.datum<von)return false;
     if(bis&&r.datum&&r.datum>bis)return false;
@@ -1395,6 +1401,7 @@ function applyFilters(){
     if(r.spenden<sMin)return false;
     if(r.kosten<kMin)return false;
     if(gegL&&!r.geraet.toLowerCase().includes(gegL))return false;
+    if(nrL&&!r.nr.includes(nrL))return false;
     return true;
   });
   sortData();renderTable();
@@ -1414,7 +1421,7 @@ function applyFilters(){
   },150);
 }
 function resetFilters(){
-  ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min','f_gegenstand'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min','f_gegenstand','f_nr'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['f_status','f_kategorie','f_triage'].forEach(id=>document.getElementById(id).value='');
   clearQS();
   applyFilters();
