@@ -219,6 +219,19 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 /* CSV BUTTON */
 .btn-csv{padding:6px 13px;background:#1a6f32;color:#fff;border:none;border-radius:6px;font-weight:700;font-size:.8rem;cursor:pointer;white-space:nowrap;display:flex;align-items:center;gap:5px}
 .btn-csv:hover{background:#155228}
+/* FILTER TOGGLE MOBILE */
+.filter-toggle-btn{display:none;width:100%;padding:8px 16px;background:var(--g1);color:#fff;border:none;font-size:.85rem;font-weight:600;cursor:pointer;text-align:left;gap:8px;align-items:center;justify-content:space-between}
+.filter-toggle-btn .ft-count{background:rgba(255,255,255,.25);padding:1px 8px;border-radius:10px;font-size:.75rem}
+#globalFilterBar.collapsed .filter-bar-inner{display:none}
+@media(max-width:700px){
+  .filter-toggle-btn{display:flex}
+  .filter-bar{padding:0!important;flex-direction:column;gap:0;top:56px}
+  .filter-bar-inner{padding:10px 12px;display:flex;flex-wrap:wrap;gap:7px;align-items:flex-end;border-top:1px solid var(--border)}
+  .fb-group{min-width:calc(50% - 4px)}
+  .fb-group.wide{min-width:100%}
+  .fb-actions{width:100%;justify-content:flex-end}
+  .table-scroll{max-height:calc(100vh - 180px)}
+}
 /* MOBILE */
 @media(max-width:700px){
   .fb-group{min-width:calc(50% - 6px)}
@@ -285,7 +298,12 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 </div>
 
 <!-- Filter Bar – global über allen Tabs -->
-<div class="filter-bar" id="globalFilterBar">
+<div class="filter-bar collapsed" id="globalFilterBar">
+  <button class="filter-toggle-btn" onclick="toggleFilterBar()">
+    <span>⚙ Filter <span id="activeFilterCount" class="ft-count">0 aktiv</span></span>
+    <span id="filterToggleIcon">▼ einblenden</span>
+  </button>
+  <div class="filter-bar-inner">
   <div class="fb-group" style="min-width:200px">
     <label>Zeitraum</label>
     <div class="qs-row" id="qsRow">
@@ -352,6 +370,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <button class="btn-report" onclick="openReport()">🖨 Report</button>
   </div>
 </div>
+  </div><!-- end filter-bar-inner -->
 
 <!-- Monatspicker Dropdown -->
 <div id="monthPicker" style="display:none;background:var(--white);border:1px solid var(--border);border-radius:var(--r);padding:10px 14px;position:sticky;top:calc(56px + 48px);z-index:89;box-shadow:var(--shadow)">
@@ -1407,6 +1426,7 @@ function applyFilters(){
   sortData();renderTable();
   document.getElementById('countBadge').textContent=filteredData.length;
   document.getElementById('countLabel').textContent=filteredData.length===1?'Eintrag gefunden':'Einträge gefunden';
+  updateActiveFilterCount();
   // Auswertung und Report mit aktuellen Daten aktualisieren wenn Tab aktiv
   clearTimeout(window._refreshTimer);
   window._refreshTimer=setTimeout(()=>{
@@ -1425,6 +1445,7 @@ function resetFilters(){
   ['f_status','f_kategorie','f_triage'].forEach(id=>document.getElementById(id).value='');
   clearQS();
   applyFilters();
+  updateActiveFilterCount();
 }
 
 // ── Sort & Render ──────────────────────────────────────────────────────────
@@ -1614,6 +1635,20 @@ function renderReport(){
       <td class="rnum" style="color:var(--g2)">${tS.toFixed(2)}</td>
       <td></td>
     </tr>`;
+}
+
+// ── Filter Toggle Mobile ──────────────────────────────────────────────────
+function toggleFilterBar(){
+  const bar=document.getElementById('globalFilterBar');
+  const icon=document.getElementById('filterToggleIcon');
+  if(bar.classList.contains('collapsed')){bar.classList.remove('collapsed');icon.textContent='▲ einklappen';}
+  else{bar.classList.add('collapsed');icon.textContent='▼ einblenden';}
+}
+function updateActiveFilterCount(){
+  const fields=['f_von','f_bis','f_name','f_plz','f_rep','f_status','f_kategorie','f_triage','f_spenden_min','f_kosten_min','f_gegenstand','f_nr'];
+  const active=fields.filter(id=>{const el=document.getElementById(id);return el&&el.value&&el.value!==''}).length;
+  const el=document.getElementById('activeFilterCount');
+  if(el)el.textContent=active>0?active+' aktiv':'0 aktiv';
 }
 
 // ── CSV Export ────────────────────────────────────────────────────────────
