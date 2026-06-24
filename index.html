@@ -222,12 +222,13 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 /* FILTER TOGGLE MOBILE */
 .filter-toggle-btn{display:none;width:100%;padding:8px 16px;background:var(--g1);color:#fff;border:none;font-size:.85rem;font-weight:600;cursor:pointer;text-align:left;gap:8px;align-items:center;justify-content:space-between}
 .filter-toggle-btn .ft-count{background:rgba(255,255,255,.25);padding:1px 8px;border-radius:10px;font-size:.75rem}
-@media(min-width:701px){
+@media(min-width:1025px){
   /* Desktop: filter-bar-inner always visible */
   .filter-bar-inner{display:flex!important;flex-wrap:wrap;gap:8px;align-items:flex-end;width:100%}
   #globalFilterBar.collapsed .filter-bar-inner{display:flex!important}
+  .filter-toggle-btn{display:none!important}
 }
-@media(max-width:700px){
+@media(max-width:1024px){
   .filter-toggle-btn{display:flex}
   .filter-bar{padding:0!important;flex-direction:column;gap:0;top:56px}
   .filter-bar-inner{padding:10px 12px;display:flex;flex-wrap:wrap;gap:7px;align-items:flex-end;border-top:1px solid var(--border)}
@@ -238,7 +239,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
   .table-scroll{max-height:calc(100vh - 180px)}
 }
 /* MOBILE */
-@media(max-width:700px){
+@media(max-width:1024px){
   .fb-group{min-width:calc(50% - 6px)}
   .fb-group.wide{min-width:100%}
   header h1{font-size:.95rem}
