@@ -233,8 +233,9 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
   .filter-bar{padding:0!important;flex-direction:column;gap:0;top:56px}
   .filter-bar-inner{padding:8px 10px;display:flex;flex-wrap:wrap;gap:5px;align-items:flex-end;border-top:1px solid var(--border)}
   #globalFilterBar.collapsed .filter-bar-inner{display:none}
-  .fb-group{min-width:calc(33% - 4px);max-width:calc(50% - 4px)}
-  .fb-group.wide{min-width:calc(50% - 4px);max-width:calc(50% - 4px)}
+  .fb-group{min-width:0!important;width:calc(33% - 4px)!important;max-width:calc(50% - 4px)}
+  .fb-zeitraum{width:100%!important;max-width:100%!important}
+  .fb-group.wide{min-width:0!important;width:calc(50% - 4px)!important;max-width:calc(50% - 4px)}
   .fb-group label{font-size:.65rem}
   .fb-group input,.fb-group select{font-size:.78rem;padding:5px 7px}
   .fb-actions{width:100%;justify-content:flex-end}
@@ -315,7 +316,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <span id="filterToggleIcon">▼ einblenden</span>
   </button>
   <div class="filter-bar-inner">
-  <div class="fb-group" style="min-width:200px">
+  <div class="fb-group fb-zeitraum">
     <label>Zeitraum</label>
     <div class="qs-row" id="qsRow">
       <button class="qs-btn" onclick="setZeitraum('monat')">Akt. Monat</button>
