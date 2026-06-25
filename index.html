@@ -79,11 +79,17 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
 
 /* BADGES */
 .badge{display:inline-block;padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:700;white-space:nowrap}
+.b-repariert   {background:#D1FAE5;color:#065F46}
+.b-inarbeit    {background:#DBEAFE;color:#1E40AF}
+.b-bleibt      {background:#FEF3C7;color:#92400E}
+.b-defekt      {background:#FFEDD5;color:#C2410C}
+.b-irreparabel {background:#FEE2E2;color:#991B1B}
+.b-def         {background:#F3F4F6;color:#374151}
+/* legacy */
 .b-rep{background:#D1FAE5;color:#065F46}
 .b-unr{background:#FEE2E2;color:#991B1B}
 .b-tri{background:#DBEAFE;color:#1E40AF}
 .b-war{background:#FEF3C7;color:#92400E}
-.b-def{background:#F3F4F6;color:#374151}
 
 /* CENTER CARDS */
 .center-card{background:var(--white);border-radius:12px;box-shadow:var(--shadow);padding:40px 28px;text-align:center;max-width:480px;margin:30px auto}
@@ -1795,13 +1801,20 @@ function hideTrendTip(){
 // ── Helpers ────────────────────────────────────────────────────────────────
 function badge(s){
   if(!s)return'<span class="badge b-def">—</span>';
-  const sl=s.toLowerCase();
-  let c='b-def';
-  if(sl.includes('repariert')&&!sl.includes('un'))c='b-rep';
-  else if(sl.includes('unrepariert')||sl.includes('nicht'))c='b-unr';
-  else if(sl.includes('triage'))c='b-tri';
-  else if(sl.includes('warte')||sl.includes('offen')||sl.includes('pend'))c='b-war';
-  return`<span class="badge ${c}">${esc(s)}</span>`;
+  const sl=s.toLowerCase().trim();
+  let cls='b-def';
+  if(sl==='repariert')                        cls='b-repariert';
+  else if(sl==='in arbeit')                   cls='b-inarbeit';
+  else if(sl==='bleibt im rcw')               cls='b-bleibt';
+  else if(sl==='defekt')                      cls='b-defekt';
+  else if(sl==='irreparabel')                 cls='b-irreparabel';
+  // Fallbacks für andere Varianten
+  else if(sl.includes('repariert')&&!sl.includes('irr'))cls='b-repariert';
+  else if(sl.includes('arbeit')||sl.includes('offen'))   cls='b-inarbeit';
+  else if(sl.includes('rcw')||sl.includes('bleibt'))     cls='b-bleibt';
+  else if(sl.includes('defekt'))                         cls='b-defekt';
+  else if(sl.includes('irrep')||sl.includes('kaputt'))   cls='b-irreparabel';
+  return`<span class="badge ${cls}">${esc(s)}</span>`;
 }
 function fmtDate(d){if(!d)return'—';const p=d.split('-');return p.length===3?`${p[2]}.${p[1]}.${p[0]}`:d;}
 function esc(s){return String(s||''). replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
