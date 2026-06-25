@@ -333,10 +333,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <label>Bis</label>
     <input type="date" id="f_bis" onchange="clearQS();applyFilters()">
   </div>
-  <div class="fb-group wide">
-    <label>Name / Kunde</label>
-    <input type="text" id="f_name" placeholder="Name…" oninput="applyFilters()">
-  </div>
+
   <div class="fb-group">
     <label>PLZ</label>
     <input type="text" id="f_plz" placeholder="PLZ…" oninput="applyFilters()">
@@ -440,7 +437,6 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
           <thead><tr>
             <th onclick="sortBy('nr')" data-col="nr">Nr. ↕</th>
             <th onclick="sortBy('datum')" data-col="datum">Datum ↕</th>
-            <th onclick="sortBy('name')" data-col="name">Kundin/Kunde ↕</th>
             <th onclick="sortBy('plz')" data-col="plz">PLZ / Ort ↕</th>
             <th onclick="sortBy('geraet')" data-col="geraet">Gegenstand ↕</th>
             <th onclick="sortBy('kategorie')" data-col="kategorie">Kategorie ↕</th>
@@ -499,7 +495,7 @@ tbody td.spen{text-align:right;font-variant-numeric:tabular-nums;color:var(--g2)
     <div style="overflow-x:auto">
       <table class="report-table" id="reportTable">
         <thead><tr>
-          <th>Nr.</th><th>Datum</th><th>Kundin/Kunde</th><th>PLZ/Ort</th>
+          <th>Nr.</th><th>Datum</th><th>PLZ/Ort</th>
           <th>Gegenstand</th><th>Kategorie</th><th>Status</th>
           <th>Reparateur</th><th>Kosten</th><th>Spenden</th><th>Kommentar</th>
         </tr></thead>
@@ -1416,7 +1412,6 @@ function fmt(d){return d.toISOString().split('T')[0];}
 function applyFilters(){
   const von=document.getElementById('f_von').value;
   const bis=document.getElementById('f_bis').value;
-  const name=document.getElementById('f_name').value.toLowerCase().trim();
   const plz=document.getElementById('f_plz').value.trim();
   const rep=document.getElementById('f_rep').value.toLowerCase().trim();
   const status=document.getElementById('f_status').value.toLowerCase();
@@ -1431,7 +1426,6 @@ function applyFilters(){
   filteredData=allData.filter(r=>{
     if(von&&r.datum&&r.datum<von)return false;
     if(bis&&r.datum&&r.datum>bis)return false;
-    if(name&&!r.name.toLowerCase().includes(name))return false;
     if(plz&&!r.plz.startsWith(plz))return false;
     if(rep&&!r.reparateur.toLowerCase().includes(rep))return false;
     if(status&&r.status.toLowerCase()!==status)return false;
@@ -1461,7 +1455,7 @@ function applyFilters(){
   },150);
 }
 function resetFilters(){
-  ['f_von','f_bis','f_name','f_plz','f_rep','f_spenden_min','f_kosten_min','f_gegenstand','f_nr'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f_von','f_bis','f_plz','f_rep','f_spenden_min','f_kosten_min','f_gegenstand','f_nr'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   ['f_status','f_kategorie','f_triage'].forEach(id=>document.getElementById(id).value='');
   clearQS();
   applyFilters();
@@ -1488,12 +1482,11 @@ function sortData(){
 }
 function renderTable(){
   const tb=document.getElementById('tableBody');
-  if(!filteredData.length){tb.innerHTML='<tr><td colspan="11" style="text-align:center;padding:36px;color:var(--soft)">Keine Einträge gefunden</td></tr>';return;}
+  if(!filteredData.length){tb.innerHTML='<tr><td colspan="10" style="text-align:center;padding:36px;color:var(--soft)">Keine Einträge gefunden</td></tr>';return;}
   tb.innerHTML=filteredData.map((r,i)=>`
     <tr onclick="openDetail(${i})">
       <td class="ref">#${r.nr}</td>
       <td>${fmtDate(r.datum)}</td>
-      <td>${esc(r.name)}</td>
       <td>${esc(r.plz)}${r.ort?'<br><small style="color:var(--soft)">'+esc(r.ort)+'</small>':''}</td>
       <td>${esc(r.geraet)}</td>
       <td>${esc(r.kategorie)}</td>
@@ -1513,7 +1506,6 @@ function openDetail(i){
     <div class="detail-grid">
       <div class="di"><div class="dl">Ref.-Nr.</div><div class="dv">#${esc(r.nr)}</div></div>
       <div class="di"><div class="dl">Datum</div><div class="dv">${fmtDate(r.datum)}</div></div>
-      <div class="di"><div class="dl">Kundin/Kunde</div><div class="dv">${esc(r.name)}</div></div>
       <div class="di"><div class="dl">PLZ / Ort</div><div class="dv">${esc(r.plz)} ${esc(r.ort)}</div></div>
       <div class="di"><div class="dl">Gegenstand</div><div class="dv">${esc(r.geraet)}</div></div>
       <div class="di"><div class="dl">Kategorie</div><div class="dv">${esc(r.kategorie)}</div></div>
@@ -1634,7 +1626,6 @@ function renderReport(){
     <tr>
       <td>#${esc(r.nr)}</td>
       <td style="white-space:nowrap">${fmtDate(r.datum)}</td>
-      <td>${esc(r.name)}</td>
       <td>${esc(r.plz)}${r.ort?' '+esc(r.ort):''}</td>
       <td>${esc(r.geraet)}</td>
       <td>${esc(r.kategorie)}</td>
@@ -1650,7 +1641,7 @@ function renderReport(){
   const tS=filteredData.reduce((s,r)=>s+r.spenden,0);
   document.getElementById('reportTableFoot').innerHTML=`
     <tr>
-      <td colspan="8" style="text-align:right">Total:</td>
+      <td colspan="7" style="text-align:right">Total:</td>
       <td class="rnum">${tK.toFixed(2)}</td>
       <td class="rnum" style="color:var(--g2)">${tS.toFixed(2)}</td>
       <td></td>
@@ -1665,7 +1656,7 @@ function toggleFilterBar(){
   else{bar.classList.add('collapsed');icon.textContent='▼ einblenden';}
 }
 function updateActiveFilterCount(){
-  const fields=['f_von','f_bis','f_name','f_plz','f_rep','f_status','f_kategorie','f_triage','f_spenden_min','f_kosten_min','f_gegenstand','f_nr'];
+  const fields=['f_von','f_bis','f_plz','f_rep','f_status','f_kategorie','f_triage','f_spenden_min','f_kosten_min','f_gegenstand','f_nr'];
   const active=fields.filter(id=>{const el=document.getElementById(id);return el&&el.value&&el.value!==''}).length;
   const el=document.getElementById('activeFilterCount');
   if(el)el.textContent=active>0?active+' aktiv':'0 aktiv';
@@ -1674,8 +1665,8 @@ function updateActiveFilterCount(){
 // ── CSV Export ────────────────────────────────────────────────────────────
 function exportCSV(){
   if(!filteredData.length){showToast('Keine Daten zum Exportieren.');return;}
-  const cols=['nr','datum','name','plz','ort','geraet','kategorie','status','triage','reparateur','repariert','defekt','erledigt','kosten','spenden','kommentar'];
-  const headers=['Nr.','Datum','Name','PLZ','Ort','Gerät','Kategorie','Status','Triage','Reparateur','Repariert','Defekt','Erledigt','Kosten CHF','Spenden CHF','Kommentar'];
+  const cols=['nr','datum','plz','ort','geraet','kategorie','status','triage','reparateur','repariert','defekt','erledigt','kosten','spenden','kommentar'];
+  const headers=['Nr.','Datum','PLZ','Ort','Gerät','Kategorie','Status','Triage','Reparateur','Repariert','Defekt','Erledigt','Kosten CHF','Spenden CHF','Kommentar'];
   const csvEsc=v=>{const s=String(v||'');return s.includes(',')||s.includes('"')||s.includes('\n')?'"'+s.replace(/"/g,'""')+'"':s;};
   const rows=[headers.join(','),...filteredData.map(r=>cols.map(k=>csvEsc(k==='datum'?fmtDate(r[k]):r[k])).join(','))];
   const blob=new Blob(['\uFEFF'+rows.join('\r\n')],{type:'text/csv;charset=utf-8'});
