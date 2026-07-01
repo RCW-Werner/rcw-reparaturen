@@ -1364,8 +1364,12 @@ function populateDropdowns(){
 function fillSel(id,vals){
   const s=document.getElementById(id),c=s.value;
   s.innerHTML='<option value="">Alle</option>';
+  // Für Status: "(Leer)" als erste Option hinzufügen
+  if(id==='f_status'){
+    const o=document.createElement('option');o.value='__leer__';o.textContent='(Leer)';s.appendChild(o);
+  }
   vals.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;s.appendChild(o);});
-  if(vals.includes(c))s.value=c;
+  if(vals.includes(c)||c==='__leer__')s.value=c;
 }
 
 // ── Zeitraum Schnellwahl ──────────────────────────────────────────────────
@@ -1442,7 +1446,8 @@ function applyFilters(){
     if(bis&&r.datum&&r.datum>bis)return false;
     if(plz&&!r.plz.startsWith(plz))return false;
     if(rep&&!r.reparateur.toLowerCase().includes(rep))return false;
-    if(status&&r.status.toLowerCase()!==status)return false;
+    if(status==='__leer__'&&r.status.trim()!=='')return false;
+    if(status&&status!=='__leer__'&&r.status.toLowerCase()!==status)return false;
     if(kat&&r.kategorie.toLowerCase()!==kat)return false;
     if(triage&&r.triage.toLowerCase()!==triage)return false;
     if(r.spenden<sMin)return false;
